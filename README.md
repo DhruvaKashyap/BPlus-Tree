@@ -1,7 +1,6 @@
 # BPlus-Tree
 
 Implementing generic B+ Tree Container
-
 Team Members: 
 Dhruva Kashyap - PES1201801457 - Section F
 Sumukh Aithal K - PES1201801461 - Section H
@@ -35,4 +34,7 @@ Supports the following STL functions:
 
 
 https://www.cs.helsinki.fi/u/mluukkai/tirak2010/B-tree.pdf
-
+https://en.wikipedia.org/wiki/B%2B_tree
+http://www.amittai.com/prose/bplustree.html
+http://www.amittai.com/prose/bplustree_cpp.html
+https://www.cs.usfca.edu/~galles/visualization/BPlusTree.html
