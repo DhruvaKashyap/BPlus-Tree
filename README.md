@@ -1,4 +1,4 @@
-# BPlus-Tree
+# Threaded BPlus-Tree
 
 Implementing generic B+ Tree Container
 Team Members: 
