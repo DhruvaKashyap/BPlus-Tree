@@ -12,14 +12,23 @@ using namespace std;
 template <int N>
 struct X
 {
-    const static bool value = N > 1;
+    constexpr static bool value = N > 1;
 };
+template <typename T>
+struct Y
+{
+    constexpr static int value = 2;
+};
+template <>
+struct Y<int>
+{
+    constexpr static int value = 4;
+};
+// template <int N>
+// concept BPLUSMIN = X<N>::value;
 
-template <int N>
-concept BPLUSMIN = X<N>::value;
-
-template <typename T, int N, typename Compare = less<T>, class Alloc = allocator<T>>
-requires BPLUSMIN<N> 
+template <typename T, int N = Y<T>::value, typename Compare = less<T>, class Alloc = allocator<T>>
+// requires BPLUSMIN<N> && default_constructible && etcall types of stuff wrt T
 class B_Plus_tree
 {
 private:
@@ -27,18 +36,15 @@ private:
     {
         T key[N];
         Node *children[N + 1];
-        Node *parent;
-        Node *next;
-        Node *prev;
-        int active_keys;
+        Node *parent = nullptr;
+        Node *next = nullptr;
+        Node *prev = nullptr;
+        int active_keys = 0;
+        bool is_leaf = false;
         Node()
         {
-            for (auto &i : key)
-                i = 0;
-            for (auto &i : children)
-                i = nullptr;
-            next = prev = parent = nullptr;
-            active_keys = 0;
+            fill(key, key + N, T());
+            fill(children, children + N + 1, nullptr);
         }
         void *operator new(size_t size)
         {
@@ -50,10 +56,7 @@ private:
                 o << "(nullptr)";
             else
             {
-                for (int i = 0; i < N; ++i)
-                {
-                    o << n->key[i] << "\t";
-                }
+                copy(n->key, n->key + N, ostream_iterator<int>(o, "\t"));
                 o << "(" << n->active_keys << ")";
             }
             return o;
@@ -68,89 +71,71 @@ private:
         int i(loc);
         while (i < p->active_keys && p->key[i] < key)
             ++i;
-        for (int j = N - 2; j >= i; --j)
-            p->key[j + 1] = p->key[j];
+        rotate(p->key+i,p->key+N-1,p->key+N);
         p->key[i] = key;
         p->active_keys++;
         return i;
     }
     void split_push_up(Node *target, T median)
     {
-        Node *parent = target->parent;
         Node *nsibling = new Node;
-        if (parent == nullptr)
+        if (target->parent == nullptr)
         {
             // new root up
             Node *np = new Node;
+            np->is_leaf = false;
             np->key[0] = median;
             np->active_keys = 1;
             target->parent = np;
             np->children[0] = target;
             np->children[1] = nsibling;
             nsibling->parent = np;
-            bool internal = true;
-            //refactor here
-            //write lambda here
-            for (auto i : target->children)
-                if (!i)
-                    internal = false;
-            if (!internal)
+            if (target->is_leaf)
             {
                 // new leaf
-                for (int l = N / 2; l < N; ++l)
-                {
-                    nsibling->key[l - N / 2] = target->key[l];
-                    nsibling->children[l - N / 2] = target->children[l];
-                    target->key[l] = 0; //do something about this
-                    target->children[l] = nullptr;
-                }
+                copy(target->key + N / 2, target->key + N, nsibling->key);
+                copy(target->children + N / 2, target->children + N, nsibling->children);
+                target->key[N / 2] = T();
+                target->children[N / 2] = nullptr;
                 nsibling->children[N / 2 + N % 2] = target->children[N];
-                nsibling->active_keys = N / 2 + N % 2;
                 target->next = nsibling;
                 nsibling->prev = target;
-                nsibling->prev = target;
+                nsibling->active_keys = N / 2 + N % 2;
+                nsibling->is_leaf = true;
             }
-            //new internal
             else
             {
-                target->key[N / 2] = 0;
-                for (int l = N / 2 + 1; l < N; ++l)
-                {
-                    nsibling->key[l - N / 2 - 1] = target->key[l];
-                    nsibling->children[l - N / 2 - 1] = target->children[l];
-                    nsibling->children[l - N / 2 - 1]->parent = nsibling;
-                    target->key[l] = 0;
-                    target->children[l] = nullptr;
-                }
+                //new internal
+                target->key[N / 2] = T();
+                copy(target->key + N / 2 + 1, target->key + N, nsibling->key);
+                copy(target->children + N / 2 + 1, target->children + N, nsibling->children);
+                for_each(nsibling->children, nsibling->children + N / 2 - 1, [nsibling](auto i) { i->parent = nsibling; });
                 nsibling->children[N / 2] = target->children[N];
                 nsibling->children[N / 2]->parent = nsibling;
                 nsibling->active_keys = N / 2 + N % 2 - 1;
+                nsibling->is_leaf = false;
             }
-            target->children[N] = nullptr;
+            fill(target->key + N / 2 + 1, target->key + N, T());
+            fill(target->children + N / 2 + 1, target->children + N + 1, nullptr);
             target->active_keys = N / 2;
             root = np;
         }
-        // new leaf
         else
         {
-            // add to target->parent
-            // if full, push up again
+            // new leaf
             int pos = insert_key_node_at(median, target->parent);
-            // create split
             target->next = nsibling;
             nsibling->parent = target->parent;
-            for (int l = N / 2; l < N; ++l)
-            {
-                nsibling->key[l - N / 2] = target->key[l];
-                target->key[l] = 0;
-            }
+            copy(target->key + N / 2, target->key + N, nsibling->key);
+            fill(target->key + N / 2, target->key + N, T());
             target->active_keys = N / 2;
             nsibling->active_keys = N / 2 + N % 2;
             target->parent->children[pos] = target;
             target->parent->children[pos + 1] = nsibling;
             nsibling->parent = target->parent;
+            nsibling->is_leaf = true;
             if (target->parent->active_keys == N)
-                split_push_up(target->parent, parent->key[N / 2]); //new median
+                split_push_up(target->parent, target->parent->key[N / 2]);
         }
     }
     void insert_key(T key)
@@ -161,6 +146,7 @@ private:
             root->key[0] = key;
             leaf_start = root;
             root->active_keys = 1;
+            root->is_leaf = true;
         }
         else
         {
@@ -178,8 +164,7 @@ private:
             insert_key_node_at(key, target, i);
             if (target->active_keys == N)
             {
-                T median = target->key[N / 2];
-                split_push_up(target, median);
+                split_push_up(target, target->key[N / 2]);
             }
         }
     }
@@ -214,7 +199,7 @@ public:
         using value_type = T;
         using iterator_category = bidirectional_iterator_tag;
         //operator++, etc
-        iterator() {}
+        // iterator() {}
     };
     // traits
     // iters
@@ -224,7 +209,7 @@ public:
 
     B_Plus_tree() {}
 
-    B_Plus_tree(std::initializer_list<T> l)
+    explicit B_Plus_tree(std::initializer_list<T> l)
     {
         for (T i : l)
         {
@@ -240,7 +225,15 @@ public:
 
     //stl copy-like ctor
     template <typename it>
-    B_Plus_tree(it begin, it end) {}
+    B_Plus_tree(it begin, it end)
+    {
+        auto i = begin;
+        while (i != end)
+        {
+            insert_key(*i);
+            ++i;
+        }
+    }
 
     //ass ctor
     B_Plus_tree<T, N, Compare, Alloc> &operator=(const B_Plus_tree<T, N, Compare, Alloc> &) {}
