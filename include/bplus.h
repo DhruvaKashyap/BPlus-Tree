@@ -1,5 +1,8 @@
 #ifndef B_PLUS_H
 #define B_PLUS_H
+#ifndef DEBUG
+#define DEBUG 0
+#endif
 #include <initializer_list>
 #include <functional>
 #include <memory>
@@ -26,9 +29,9 @@ private:
             next = prev = parent = nullptr;
             active_keys = 0;
         }
-        void* operator new(size_t size)
+        void *operator new(size_t size)
         {
-            return ::operator new(size);    //call allocator or something here
+            return ::operator new(size); //call allocator or something here
         }
         friend ostream &operator<<(ostream &o, Node *n)
         {
