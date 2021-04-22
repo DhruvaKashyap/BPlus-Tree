@@ -7,8 +7,19 @@
 #include <functional>
 #include <memory>
 #include <algorithm>
+#include <concepts>
 using namespace std;
+template <int N>
+struct X
+{
+    const static bool value = N > 1;
+};
+
+template <int N>
+concept BPLUSMIN = X<N>::value;
+
 template <typename T, int N, typename Compare = less<T>, class Alloc = allocator<T>>
+requires BPLUSMIN<N> 
 class B_Plus_tree
 {
 private:
@@ -186,6 +197,15 @@ private:
             cout << "\n\n\n";
         }
     }
+    void delete_tree(Node *root)
+    {
+        if (root)
+        {
+            for (auto p : root->children)
+                delete_tree(p);
+            delete root;
+        }
+    }
 
 public:
     class iterator
@@ -208,11 +228,11 @@ public:
     {
         for (T i : l)
         {
-            // cout << i << "\n";
             insert_key(i);
         }
+#if DEBUG
         print_tree(root);
-        cout << "\n\n\n\n\n";
+#endif
     }
 
     //copy ctor
@@ -232,7 +252,10 @@ public:
     B_Plus_tree<T, N, Compare, Alloc> &operator=(B_Plus_tree<T, N, Compare, Alloc> &&) {}
 
     //dtor
-    ~B_Plus_tree() {}
+    ~B_Plus_tree()
+    {
+        delete_tree(root);
+    }
 
     pair<iterator, bool> insert(T key) {} // inserts elements
     void insert(std::initializer_list<T> l) {}

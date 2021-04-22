@@ -1,7 +1,7 @@
 # Planning to add tests to check performance
 SRC=src/client.cpp
 CXX=g++
-CPPFLAGS = -Wall -pedantic -I ./include/ 
+CPPFLAGS = -Wall -std=c++20 -pedantic -I ./include/
 
 all: a.out
 
