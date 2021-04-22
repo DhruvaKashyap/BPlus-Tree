@@ -71,7 +71,7 @@ private:
         int i(loc);
         while (i < p->active_keys && p->key[i] < key)
             ++i;
-        rotate(p->key+i,p->key+N-1,p->key+N);
+        rotate(p->key + i, p->key + N - 1, p->key + N);
         p->key[i] = key;
         p->active_keys++;
         return i;
@@ -79,6 +79,7 @@ private:
     void split_push_up(Node *target, T median)
     {
         Node *nsibling = new Node;
+        //refactor 4 cases to 3
         if (target->parent == nullptr)
         {
             // new root up
@@ -94,12 +95,9 @@ private:
             {
                 // new leaf
                 copy(target->key + N / 2, target->key + N, nsibling->key);
-                copy(target->children + N / 2, target->children + N, nsibling->children);
-                target->key[N / 2] = T();
-                target->children[N / 2] = nullptr;
-                nsibling->children[N / 2 + N % 2] = target->children[N];
                 target->next = nsibling;
                 nsibling->prev = target;
+                target->key[N / 2] = T();
                 nsibling->active_keys = N / 2 + N % 2;
                 nsibling->is_leaf = true;
             }
@@ -124,18 +122,37 @@ private:
         {
             // new leaf
             int pos = insert_key_node_at(median, target->parent);
-            target->next = nsibling;
             nsibling->parent = target->parent;
-            copy(target->key + N / 2, target->key + N, nsibling->key);
-            fill(target->key + N / 2, target->key + N, T());
+            if (target->is_leaf)
+            {
+                copy(target->key + N / 2, target->key + N, nsibling->key);
+                target->next = nsibling;
+                nsibling->prev = target;
+                target->key[N / 2] = T();
+                nsibling->active_keys = N / 2 + N % 2;
+                nsibling->is_leaf = true;
+            }
+            else
+            {
+                //new sibling
+                target->key[N / 2] = T();
+                copy(target->key + N / 2 + 1, target->key + N, nsibling->key);
+                copy(target->children + N / 2 + 1, target->children + N, nsibling->children);
+                for_each(nsibling->children, nsibling->children + N / 2 - 1, [nsibling](auto i) { i->parent = nsibling; });
+                nsibling->children[N / 2] = target->children[N];
+                nsibling->children[N / 2]->parent = nsibling;
+                nsibling->active_keys = N / 2 + N % 2 - 1;
+                nsibling->is_leaf = false;
+            }
+            fill(target->key + N / 2 + 1, target->key + N, T());
+            fill(target->children + N / 2 + 1, target->children + N + 1, nullptr);
             target->active_keys = N / 2;
-            nsibling->active_keys = N / 2 + N % 2;
             target->parent->children[pos] = target;
             target->parent->children[pos + 1] = nsibling;
-            nsibling->parent = target->parent;
-            nsibling->is_leaf = true;
             if (target->parent->active_keys == N)
+            {
                 split_push_up(target->parent, target->parent->key[N / 2]);
+            }
         }
     }
     void insert_key(T key)

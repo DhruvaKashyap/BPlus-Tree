@@ -10,7 +10,7 @@ a.out: $(SRC) $(HEADER)
 	@$(CXX) $(CPPFLAGS) $(SRC)
 
 debug: $(SRC)
-	$(CXX) $(CPPFLAGS) -DDEBUG=1 $(SRC) -o debug.out
+	$(CXX) $(CPPFLAGS) -g -DDEBUG=1 $(SRC) -o debug.out
 
 .PHONY: clean
 
