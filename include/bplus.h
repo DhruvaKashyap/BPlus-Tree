@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <concepts>
 #include <iterator>
+#include <vector>
+#include <array>
 using namespace std;
 template <int N>
 struct X
@@ -18,25 +20,26 @@ struct X
 template <typename T>
 struct Y
 {
-    constexpr static int value = 2;
+    constexpr static int value = 4;
 };
 template <>
 struct Y<int>
 {
-    constexpr static int value = 4;
+    constexpr static int value = 8;
 };
 // template <int N>
 // concept BPLUSMIN = X<N>::value;
 
 template <typename T, int N = Y<T>::value, typename Compare = less<T>, class Alloc = allocator<T>>
-// requires BPLUSMIN<N> && default_constructible && etcall types of stuff wrt T
+// requires BPLUSMIN<N> //&& default_constructible && etcall types of stuff wrt T
 class B_Plus_tree
 {
 private:
     struct Node
     {
-        T key[N]; //could be a vector
+        // T key[N]; //could be a vector
         // vector<T> key;
+        array<T, N> key;    
         Node *children[N + 1];
         Node *parent = nullptr;
         Node *next = nullptr;
@@ -106,7 +109,7 @@ private:
         }
         else
         {
-            if (N == 2)
+            if constexpr (N == 2)
             {
                 nsibling->key[0] = target->key[1];
             }
@@ -119,7 +122,8 @@ private:
             }
             nsibling->is_leaf = false;
             nsibling->children[N / 2] = target->children[N];
-            nsibling->children[N / 2]->parent = nsibling;
+            if (target->children[N])
+                nsibling->children[N / 2]->parent = nsibling;
         }
         fill(target->children + N / 2 + 1, target->children + N + 1, nullptr);
         target->active_keys = N / 2;
@@ -146,7 +150,7 @@ private:
             {
                 i = 0;
                 while (i < p->active_keys && Compare()(p->key[i], key))
-                    ++i;
+                    ++i; //check duplicates here
                 target = p;
                 p = p->children[i];
             }
@@ -162,12 +166,14 @@ private:
         if (root)
         {
             cout << root << "\n";
-            for (auto i : root->children)
-                cout << i << "\t";
-            cout << "\n\n";
-            for (auto i : root->children)
-                print_tree(i);
-
+            if (!root->is_leaf)
+            {
+                for (auto i : root->children)
+                    cout << i << "\t";
+                cout << "\n\n";
+                for (auto i : root->children)
+                    print_tree(i);
+            }
             cout << "\n\n\n";
         }
     }
