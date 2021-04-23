@@ -104,13 +104,24 @@ private:
             else
             {
                 //new internal
-                target->key[N / 2] = T();
-                copy(target->key + N / 2 + 1, target->key + N, nsibling->key);
-                copy(target->children + N / 2 + 1, target->children + N, nsibling->children);
-                for_each(nsibling->children, nsibling->children + N / 2 - 1, [nsibling](auto i) { i->parent = nsibling; });
-                nsibling->children[N / 2] = target->children[N];
-                nsibling->children[N / 2]->parent = nsibling;
-                nsibling->active_keys = N / 2 + N % 2 - 1;
+                if (N == 2) // only for 2, special case
+                {
+                    nsibling->key[0] = target->key[1];
+                    nsibling->children[1] = target->children[2];
+                    nsibling->children[1]->parent = nsibling;
+                    target->key[1] = T();
+                    nsibling->active_keys = 1;
+                }
+                else
+                {
+                    target->key[N / 2] = T();
+                    copy(target->key + N / 2 + 1, target->key + N, nsibling->key);
+                    copy(target->children + N / 2 + 1, target->children + N, nsibling->children);
+                    for_each(nsibling->children, nsibling->children + N / 2 - 1, [nsibling](auto i) { i->parent = nsibling; });
+                    nsibling->active_keys = N / 2 + N % 2 - 1;
+                    nsibling->children[N / 2] = target->children[N];
+                    nsibling->children[N / 2]->parent = nsibling;
+                }
                 nsibling->is_leaf = false;
             }
             fill(target->key + N / 2 + 1, target->key + N, T());
@@ -134,14 +145,25 @@ private:
             }
             else
             {
-                //new sibling
-                target->key[N / 2] = T();
-                copy(target->key + N / 2 + 1, target->key + N, nsibling->key);
-                copy(target->children + N / 2 + 1, target->children + N, nsibling->children);
-                for_each(nsibling->children, nsibling->children + N / 2 - 1, [nsibling](auto i) { i->parent = nsibling; });
-                nsibling->children[N / 2] = target->children[N];
-                nsibling->children[N / 2]->parent = nsibling;
-                nsibling->active_keys = N / 2 + N % 2 - 1;
+                //new internal
+                if (N == 2) // only for 2, special case
+                {
+                    nsibling->key[0] = target->key[1];
+                    nsibling->children[1] = target->children[2];
+                    nsibling->children[1]->parent = nsibling;
+                    target->key[1] = T();
+                    nsibling->active_keys = 1;
+                }
+                else
+                {
+                    target->key[N / 2] = T();
+                    copy(target->key + N / 2 + 1, target->key + N, nsibling->key);
+                    copy(target->children + N / 2 + 1, target->children + N, nsibling->children);
+                    for_each(nsibling->children, nsibling->children + N / 2 - 1, [nsibling](auto i) { i->parent = nsibling; });
+                    nsibling->children[N / 2] = target->children[N];
+                    nsibling->children[N / 2]->parent = nsibling;
+                    nsibling->active_keys = N / 2 + N % 2 - 1;
+                }
                 nsibling->is_leaf = false;
             }
             fill(target->key + N / 2 + 1, target->key + N, T());
