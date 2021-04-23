@@ -37,9 +37,9 @@ class B_Plus_tree
 private:
     struct Node
     {
-        // T key[N]; //could be a vector
-        // vector<T> key;
-        array<T, N> key;    
+        // T key[N]; // 78896 could be a vector. could keep ptrs to keys to allow non default ctorable, more mem usage
+        vector<T> key; //80384 allows non default constructable
+        // array<T, N> key; //78896
         Node *children[N + 1];
         Node *parent = nullptr;
         Node *next = nullptr;
@@ -48,8 +48,8 @@ private:
         bool is_leaf = false;
         Node()
         {
-            // key.reserve(N);
-            fill(std::begin(key), std::end(key), T());
+            key.reserve(N);
+            // fill(std::begin(key), std::end(key), T());
             fill(children, children + N + 1, nullptr);
         }
         void *operator new(size_t size)
@@ -76,7 +76,8 @@ private:
         int i(loc);
         while (i < p->active_keys && p->key[i] < key)
             ++i;
-        rotate(std::begin(p->key) + i, std::end(p->key) - 1, std::end(p->key));
+
+        rotate(std::begin(p->key) + i, std::begin(p->key) + N - 1, std::begin(p->key) + N);
         p->key[i] = key;
         p->active_keys++;
         return i;
@@ -102,7 +103,7 @@ private:
         nsibling->active_keys = N / 2 + N % 2;
         if (target->is_leaf)
         {
-            copy(std::begin(target->key) + N / 2, std::end(target->key), std::begin(nsibling->key)); //end begin no work bottleneck if vector
+            copy(std::begin(target->key) + N / 2, std::begin(target->key) + N, std::begin(nsibling->key)); //end begin no work bottleneck if vector
             target->next = nsibling;
             nsibling->prev = target;
             nsibling->is_leaf = true;
@@ -115,7 +116,7 @@ private:
             }
             else
             {
-                copy(std::begin(target->key) + N / 2 + 1, std::end(target->key), std::begin(nsibling->key));
+                copy(std::begin(target->key) + N / 2 + 1, std::begin(target->key) + N, std::begin(nsibling->key));
                 copy(target->children + N / 2 + 1, target->children + N, nsibling->children);
                 for_each(nsibling->children, nsibling->children + N / 2 - 1, [nsibling](auto i) { i->parent = nsibling; });
                 --nsibling->active_keys;
