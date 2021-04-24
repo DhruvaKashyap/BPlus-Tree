@@ -12,6 +12,7 @@
 #include <vector>
 #include <array>
 #include <iostream>
+// #include <assert.h>
 using namespace std;
 template <int N>
 struct X
@@ -71,6 +72,7 @@ private:
     int __degree = N;
     Node *root = nullptr;
     Node *leaf_start = nullptr;
+    Node *leaf_end = nullptr;
     size_t nums = 0;
     int insert_key_node_at(T key, Node *p, int loc = 0)
     {
@@ -87,6 +89,7 @@ private:
     {
         Node *nsibling = new Node;
         nsibling->is_leaf = target->is_leaf;
+        nsibling->next = target->next;
         nsibling->active_keys = N / 2 + N % 2;
         int pos(0);
         if (target->parent == nullptr)
@@ -111,6 +114,8 @@ private:
             copy(std::begin(target->key) + N / 2, std::begin(target->key) + N, std::begin(nsibling->key)); //end begin no work bottleneck if vector
             target->next = nsibling;
             nsibling->prev = target;
+            if (target == leaf_end)
+                leaf_end = nsibling;
         }
         else
         {
@@ -139,6 +144,7 @@ private:
             root = new Node;
             root->key[0] = key;
             leaf_start = root;
+            leaf_end = root;
             root->active_keys = 1;
             root->is_leaf = true;
         }
@@ -199,14 +205,90 @@ private:
 public:
     class iterator
     {
-        Node *n;
+        Node *ptr;
+        Node *end;
         int index;
+        iterator(Node *n, Node *e, int i) : ptr(n), end(e), index(i)
+        {
+        }
+        friend class B_Plus_tree<T, N, Compare, Alloc>;
 
     public:
         using value_type = T;
         using iterator_category = bidirectional_iterator_tag;
-        //operator++, etc
-        iterator() {}
+        friend bool operator==(const iterator &lhs, const iterator &rhs)
+        {
+            return lhs.ptr == rhs.ptr && lhs.index == rhs.index;
+        }
+        friend bool operator!=(const iterator &lhs, const iterator &rhs)
+        {
+            return !(lhs == rhs);
+        }
+        iterator &operator++()
+        {
+            if (ptr)
+            {
+                if (index < ptr->active_keys - 1)
+                {
+                    ++index;
+                }
+                else
+                {
+                    index = 0;
+                    ptr = ptr->next;
+                }
+            }
+            else
+            {
+                ++index;
+            }
+            return *this;
+        }
+        iterator operator++(int)
+        {
+            iterator temp(*this);
+            ++*this;
+            return temp;
+        }
+        iterator &operator--()
+        {
+            if (ptr)
+            {
+                if (index > 0)
+                {
+                    --index;
+                }
+                else
+                {
+                    if (ptr->prev)
+                    {
+                        index = ptr->prev->active_keys - 1;
+                        ptr = ptr->prev;
+                    }
+                }
+            }
+            else
+            {
+                if (!index)
+                {
+                    ptr = end;
+                    index = end->active_keys - 1;
+                }
+                else
+                    --index;
+            }
+            return *this;
+        }
+        iterator operator--(int)
+        {
+            iterator temp(*this);
+            --*this;
+            return temp;
+        }
+        T operator*()
+        {
+            return ptr->key[index];
+        }
     };
     // traits
     // iters
@@ -221,9 +303,19 @@ public:
         for (T i : l)
         {
             insert_key(i);
+            // print_tree(root);
+            // Node *x = leaf_start;
+            // while (x!=leaf_end)
+            // {
+            //     cout << x;
+            //     x = x->next;
+            // }
+            // cout<<leaf_end;
+            // cout << "\n";
         }
 #if DEBUG
         print_tree(root);
+
 #endif
     }
 
@@ -287,7 +379,14 @@ public:
     }
 
     iterator find(T key) {}
-    iterator begin() {}
+    iterator begin()
+    {
+        return iterator(leaf_start, leaf_end, 0);
+    }
+    iterator end()
+    {
+        return iterator(nullptr, leaf_end, 0);
+    }
     // // ...
     // // begin,end => in_begin,in_end
     // // rbegin, rend

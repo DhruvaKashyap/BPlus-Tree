@@ -1,6 +1,8 @@
 #include <iostream>
 #include "bplus.h"
 #include <vector>
+#include <deque>
+#include <set>
 using namespace std;
 
 class CC
@@ -25,15 +27,22 @@ int main()
 #if DEBUG
     cout << "DEBUGGING TURNED ON\n";
 #endif
-    B_Plus_tree<int, 2> a({1, 2, 3, 4, 5, 6, 7, 8, 1});
-    B_Plus_tree<int, 3> b({1, 2, 3, 4, 5, 6, 7, 8});
-    B_Plus_tree<int, 4> c({1, 2, 3, 4, 5, 6, 7, 8});
-    B_Plus_tree<int, 5> d({1, 2, 3, 4, 5, 6, 7, 8});
-    B_Plus_tree<int, 6> e({1, 2, 3, 4, 5, 6, 7, 8});
-    B_Plus_tree<int, 7> f({1, 2, 3, 4, 5, 6, 7, 8});
-    B_Plus_tree<int, 8> g({1, 2, 3, 4, 5, 6, 7, 8});
-    {
-        // B_Plus_tree<int, 2> a({8,7,6,5,4,3,2,1});
-    }
-    // B_Plus_tree<CC> kkk({1,1});
+    // B_Plus_tree<int, 2> a({1, 2, 3, 4, 5, 6, 7, 8, 1});
+    B_Plus_tree<int, 3> b({8, 2, 3, 6, 1, 4, 7, 5});
+    // B_Plus_tree<int, 4> c({1, 2, 3, 4, 5, 6, 7, 8});
+    // B_Plus_tree<int, 5> d({1, 2, 3, 4, 5, 6, 7, 8});
+    // B_Plus_tree<int, 6> e({1, 2, 3, 4, 5, 6, 7, 8});
+    // B_Plus_tree<int, 7> f({1, 2, 3, 4, 5, 6, 7, 8});
+    // B_Plus_tree<int, 8> g({1, 2, 3, 4, 5, 6, 7, 8});
+    for (auto i : b)
+        cout << i << "\t";
+    // *b.begin()
+    // b.end()++;
+    cout << "\n";
+    set<int> a({1,2});
+    int x = *(--a.begin());
+    cout << x << "\n";
+    // x = *(++--b.begin());
+    // cout << x << "\n";
+    cout << "\n";
 }
