@@ -11,6 +11,7 @@
 #include <iterator>
 #include <vector>
 #include <array>
+#include <iostream>
 using namespace std;
 template <int N>
 struct X
@@ -37,8 +38,8 @@ class B_Plus_tree
 private:
     struct Node
     {
-        // T key[N]; // 78896 could be a vector. could keep ptrs to keys to allow non default ctorable, more mem usage
-        vector<T> key; //80384 allows non default constructable
+        T key[N]; // 78896 could be a vector. could keep ptrs to keys to allow non default ctorable, more mem usage
+        // vector<T> key; //80384 allows non default constructable
         // array<T, N> key; //78896
         Node *children[N + 1];
         Node *parent = nullptr;
@@ -48,8 +49,7 @@ private:
         bool is_leaf = false;
         Node()
         {
-            key.reserve(N);
-            // fill(std::begin(key), std::end(key), T());
+            // key.reserve(N);
             fill(children, children + N + 1, nullptr);
         }
         void *operator new(size_t size)
@@ -71,6 +71,7 @@ private:
     int __degree = N;
     Node *root = nullptr;
     Node *leaf_start = nullptr;
+    size_t nums = 0;
     int insert_key_node_at(T key, Node *p, int loc = 0)
     {
         int i(loc);
@@ -85,6 +86,8 @@ private:
     void split_push_up(Node *target, T median)
     {
         Node *nsibling = new Node;
+        nsibling->is_leaf = target->is_leaf;
+        nsibling->active_keys = N / 2 + N % 2;
         int pos(0);
         if (target->parent == nullptr)
         {
@@ -92,6 +95,7 @@ private:
             np->key[0] = median;
             np->active_keys = 1;
             root = target->parent = np;
+            ++nums;
         }
         else
         {
@@ -100,13 +104,13 @@ private:
         nsibling->parent = target->parent;
         target->parent->children[pos] = target;
         target->parent->children[pos + 1] = nsibling;
-        nsibling->active_keys = N / 2 + N % 2;
         if (target->is_leaf)
         {
+            // should median placement depend on predicate?
+            // if yes change here and target->active_keys
             copy(std::begin(target->key) + N / 2, std::begin(target->key) + N, std::begin(nsibling->key)); //end begin no work bottleneck if vector
             target->next = nsibling;
             nsibling->prev = target;
-            nsibling->is_leaf = true;
         }
         else
         {
@@ -117,14 +121,10 @@ private:
             else
             {
                 copy(std::begin(target->key) + N / 2 + 1, std::begin(target->key) + N, std::begin(nsibling->key));
-                copy(target->children + N / 2 + 1, target->children + N, nsibling->children);
-                for_each(nsibling->children, nsibling->children + N / 2 - 1, [nsibling](auto i) { i->parent = nsibling; });
                 --nsibling->active_keys;
             }
-            nsibling->is_leaf = false;
-            nsibling->children[N / 2] = target->children[N];
-            if (target->children[N])
-                nsibling->children[N / 2]->parent = nsibling;
+            copy(target->children + N / 2 + 1, target->children + N + 1, std::begin(nsibling->children) + static_cast<int>(N == 2));
+            for_each(std::begin(nsibling->children), nsibling->children + N / 2 + 1, [nsibling](auto i) { if(i) i->parent = nsibling; });
         }
         fill(target->children + N / 2 + 1, target->children + N + 1, nullptr);
         target->active_keys = N / 2;
@@ -151,7 +151,13 @@ private:
             {
                 i = 0;
                 while (i < p->active_keys && Compare()(p->key[i], key))
-                    ++i; //check duplicates here
+                {
+                    ++i;
+                }
+                if (!Compare()(p->key[i], key) && !Compare()(key, p->key[i]))
+                {
+                    return; //return iterator(p,i),false
+                }
                 target = p;
                 p = p->children[i];
             }
@@ -161,6 +167,8 @@ private:
                 split_push_up(target, target->key[N / 2]);
             }
         }
+        ++nums;
+        //return iterator; iterator has p and i
     }
     void print_tree(Node *root)
     {
@@ -191,11 +199,14 @@ private:
 public:
     class iterator
     {
+        Node *n;
+        int index;
+
     public:
         using value_type = T;
         using iterator_category = bidirectional_iterator_tag;
         //operator++, etc
-        // iterator() {}
+        iterator() {}
     };
     // traits
     // iters
@@ -217,7 +228,7 @@ public:
     }
 
     //copy ctor
-    B_Plus_tree(const B_Plus_tree<T, N> &) {}
+    B_Plus_tree(const B_Plus_tree<T, N> &copy) {}
 
     //stl copy-like ctor
     template <typename it>
@@ -232,13 +243,13 @@ public:
     }
 
     //ass ctor
-    B_Plus_tree<T, N, Compare, Alloc> &operator=(const B_Plus_tree<T, N, Compare, Alloc> &) {}
+    B_Plus_tree<T, N, Compare, Alloc> &operator=(const B_Plus_tree<T, N, Compare, Alloc> &rhs) {}
 
     //move ctor
-    B_Plus_tree(B_Plus_tree<T, N, Compare, Alloc> &&) {}
+    B_Plus_tree(B_Plus_tree<T, N, Compare, Alloc> &&copy) {}
 
     //move ass
-    B_Plus_tree<T, N, Compare, Alloc> &operator=(B_Plus_tree<T, N, Compare, Alloc> &&) {}
+    B_Plus_tree<T, N, Compare, Alloc> &operator=(B_Plus_tree<T, N, Compare, Alloc> &&rhs) {}
 
     //dtor
     ~B_Plus_tree()
@@ -247,15 +258,33 @@ public:
     }
 
     pair<iterator, bool> insert(T key) {} // inserts elements
-    void insert(std::initializer_list<T> l) {}
+    void insert(std::initializer_list<T> l)
+    {
+        for (T i : l)
+        {
+            insert_key(i);
+        }
+    }
     template <typename it>
-    void insert(it begin, it end) {}
+    void insert(it begin, it end)
+    {
+        auto i = begin;
+        while (i != end)
+        {
+            insert_key(*i);
+            ++i;
+        }
+    }
 
     iterator delete_key(T key) {}
     iterator delete_key(iterator it) {}
     void delete_key(iterator begin, iterator end) {}
 
-    void clear() {}
+    void clear()
+    {
+        delete_tree(root);
+        leaf_start = root = nullptr;
+    }
 
     iterator find(T key) {}
     iterator begin() {}
