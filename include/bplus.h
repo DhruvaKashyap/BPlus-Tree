@@ -12,7 +12,7 @@
 #include <vector>
 #include <array>
 #include <iostream>
-// #include <assert.h>
+#include <cassert>
 using namespace std;
 template <int N>
 struct X
@@ -36,6 +36,9 @@ template <typename T, int N = Y<T>::value, typename Compare = less<T>, class All
 // requires BPLUSMIN<N> //&& default_constructible && etcall types of stuff wrt T
 class B_Plus_tree
 {
+public:
+    class iterator;
+
 private:
     struct Node
     {
@@ -64,7 +67,7 @@ private:
             else
             {
                 copy(std::begin(n->key), std::begin(n->key) + n->active_keys, ostream_iterator<T>(o, "\t"));
-                o << "(" << n->active_keys << ")";
+                o << "(" << n->active_keys << "," << n->is_leaf << ")\t";
             }
             return o;
         }
@@ -104,6 +107,10 @@ private:
         {
             pos = insert_key_node_at(median, target->parent);
         }
+        for (int j = N; j > pos; --j)
+        {
+            target->parent->children[j] = target->parent->children[j - 1];
+        }
         nsibling->parent = target->parent;
         target->parent->children[pos] = target;
         target->parent->children[pos + 1] = nsibling;
@@ -136,8 +143,7 @@ private:
         if (target->parent->active_keys == N)
             split_push_up(target->parent, target->parent->key[N / 2]);
     }
-
-    void insert_key(T key)
+    pair<iterator, bool> insert_key(T key)
     {
         if (!root)
         {
@@ -147,6 +153,8 @@ private:
             leaf_end = root;
             root->active_keys = 1;
             root->is_leaf = true;
+            ++nums;
+            return make_pair(iterator(root, leaf_end, 0), false);
         }
         else
         {
@@ -160,9 +168,9 @@ private:
                 {
                     ++i;
                 }
-                if (!Compare()(p->key[i], key) && !Compare()(key, p->key[i]))
+                if (i < p->active_keys && !Compare()(p->key[i], key) && !Compare()(key, p->key[i]))
                 {
-                    return; //return iterator(p,i),false
+                    return make_pair(iterator(p, leaf_end, i), false); //return iterator(p,leaf_end,i),false
                 }
                 target = p;
                 p = p->children[i];
@@ -172,8 +180,9 @@ private:
             {
                 split_push_up(target, target->key[N / 2]);
             }
+            ++nums;
+            return make_pair(iterator(p, leaf_end, i), false);
         }
-        ++nums;
         //return iterator; iterator has p and i
     }
     void print_tree(Node *root)
@@ -203,7 +212,7 @@ private:
     }
 
 public:
-    class iterator
+    class iterator : public std::iterator<std::bidirectional_iterator_tag, T>
     {
         Node *ptr;
         Node *end;
@@ -349,7 +358,10 @@ public:
         delete_tree(root);
     }
 
-    pair<iterator, bool> insert(T key) {} // inserts elements
+    pair<iterator, bool> insert(T key)
+    {
+        return insert_key(key);
+    } // inserts elements
     void insert(std::initializer_list<T> l)
     {
         for (T i : l)
