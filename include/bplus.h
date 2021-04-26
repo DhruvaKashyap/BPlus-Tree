@@ -57,10 +57,10 @@ private:
             // key.reserve(N);
             fill(children, children + N + 1, nullptr);
         }
-        Node& operator=(const Node& rhs)
+        Node &operator=(const Node &rhs)
         {
-            cout<<"operator= called\n";
-            if(this!=rhs)
+            cout << "operator= called\n";
+            if (this != rhs)
             {
                 ;
             }
@@ -90,7 +90,7 @@ private:
     int insert_key_node_at(T key, Node *p, int loc = 0)
     {
         int i(loc);
-        while (i < p->active_keys && p->key[i] < key)
+        while (i < p->active_keys && Compare()(p->key[i], key))
             ++i;
 
         rotate(std::begin(p->key) + i, std::begin(p->key) + N - 1, std::begin(p->key) + N);
@@ -112,17 +112,16 @@ private:
             np->active_keys = 1;
             root = target->parent = np;
             ++nums;
+            target->parent->children[0] = target;
         }
         else
         {
             pos = insert_key_node_at(median, target->parent);
-        }
-        for (int j = N; j > pos; --j)
-        {
-            target->parent->children[j] = target->parent->children[j - 1];
+            // rotate(target->children + pos, target->children + N , target->children + N + 1);
+            for (int j = N; j > pos; --j)
+                target->parent->children[j] = target->parent->children[j - 1];
         }
         nsibling->parent = target->parent;
-        target->parent->children[pos] = target;
         target->parent->children[pos + 1] = nsibling;
         if (target->is_leaf)
         {
@@ -339,10 +338,11 @@ public:
     }
 
     //copy ctor
-    B_Plus_tree(const B_Plus_tree<T, N> &copy) {
+    B_Plus_tree(const B_Plus_tree<T, N> &copy)
+    {
         __degree = copy.__degree;
         root = new Node;
-        std::memcpy(root, copy.root, sizeof(Node*));
+        std::memcpy(root, copy.root, sizeof(Node *));
         nums = copy.nums;
         // recursive_copy(copy.root);
     }
@@ -406,23 +406,24 @@ public:
         leaf_start = root = nullptr;
     }
 
-    iterator find(T key) {
-        Node* temp = root;
+    iterator find(T key)
+    {
+        Node *temp = root;
         int i;
-        while(temp)
+        while (temp)
         {
             i = 0;
-            while (i < temp->active_keys && temp->key[i]<=key)
+            while (i < temp->active_keys && temp->key[i] <= key)
             {
-                if(temp->key[i]==key && temp->is_leaf)
+                if (temp->key[i] == key && temp->is_leaf)
                 {
-                    return iterator(temp,leaf_end,i);
+                    return iterator(temp, leaf_end, i);
                 }
                 ++i;
             }
             temp = temp->children[i];
         }
-        return iterator(nullptr,leaf_end,0);
+        return iterator(nullptr, leaf_end, 0);
     }
 
     iterator begin()
