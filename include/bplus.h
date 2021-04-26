@@ -128,6 +128,8 @@ private:
             // should median placement depend on predicate?
             // if yes change here and target->active_keys
             copy(std::begin(target->key) + N / 2, std::begin(target->key) + N, std::begin(nsibling->key)); //end begin no work bottleneck if vector
+            if (target->next)
+                target->next->prev = nsibling;
             target->next = nsibling;
             nsibling->prev = target;
             if (target == leaf_end)
