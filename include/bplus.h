@@ -13,6 +13,7 @@
 #include <array>
 #include <iostream>
 #include <cassert>
+#include <cstring>
 using namespace std;
 template <int N>
 struct X
@@ -55,6 +56,15 @@ private:
         {
             // key.reserve(N);
             fill(children, children + N + 1, nullptr);
+        }
+        Node& operator=(const Node& rhs)
+        {
+            cout<<"operator= called\n";
+            if(this!=rhs)
+            {
+                ;
+            }
+            return *this;
         }
         void *operator new(size_t size)
         {
@@ -329,7 +339,13 @@ public:
     }
 
     //copy ctor
-    B_Plus_tree(const B_Plus_tree<T, N> &copy) {}
+    B_Plus_tree(const B_Plus_tree<T, N> &copy) {
+        __degree = copy.__degree;
+        root = new Node;
+        std::memcpy(root, copy.root, sizeof(Node*));
+        nums = copy.nums;
+        // recursive_copy(copy.root);
+    }
 
     //stl copy-like ctor
     template <typename it>
@@ -390,7 +406,25 @@ public:
         leaf_start = root = nullptr;
     }
 
-    iterator find(T key) {}
+    iterator find(T key) {
+        Node* temp = root;
+        int i;
+        while(temp)
+        {
+            i = 0;
+            while (i < temp->active_keys && temp->key[i]<=key)
+            {
+                if(temp->key[i]==key && temp->is_leaf)
+                {
+                    return iterator(temp,leaf_end,i);
+                }
+                ++i;
+            }
+            temp = temp->children[i];
+        }
+        return iterator(nullptr,leaf_end,0);
+    }
+
     iterator begin()
     {
         return iterator(leaf_start, leaf_end, 0);
