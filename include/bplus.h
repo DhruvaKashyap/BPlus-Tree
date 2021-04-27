@@ -7,7 +7,7 @@
 #include <functional>
 #include <memory>
 #include <algorithm>
-#include <concepts>
+// #include <concepts>
 #include <iterator>
 #include <vector>
 #include <array>
@@ -39,7 +39,7 @@ class B_Plus_tree
 {
 public:
     class iterator;
-
+    class reverse_iterator;
 private:
     struct Node
     {
@@ -304,6 +304,8 @@ private:
             // should median placement depend on predicate?
             // if yes change here and target->active_keys
             copy(std::begin(target->key) + N / 2, std::begin(target->key) + N, std::begin(nsibling->key)); //end begin no work bottleneck if vector
+            if (target->next)
+                target->next->prev = nsibling;
             target->next = nsibling;
             nsibling->prev = target;
             if (target == leaf_end)
@@ -446,6 +448,7 @@ public:
         }
         iterator &operator--()
         {
+            // cout<<"operator--\n";
             if (ptr)
             {
                 if (index > 0)
@@ -484,6 +487,35 @@ public:
             return ptr->key[index];
         }
     };
+
+class reverse_iterator : public iterator
+{ 
+    protected:
+    reverse_iterator(Node *n, Node *e, int j) : iterator{n,e,j}
+    {
+    }
+    friend class B_Plus_tree<T, N, Compare, Alloc>;
+    public:
+    iterator &operator++()
+    {
+        return iterator::operator--();
+    }
+    iterator operator++(int)
+    {
+        // return it--;
+        return iterator::operator--(1);
+    }
+    reverse_iterator &operator--()
+    {
+        // return ++i;
+        return iterator::operator++();
+    }
+    reverse_iterator operator--(int)
+    {
+        // return i++;
+        return iterator::operator++(1);
+    }
+};
     // traits
     // iters
     // ctors
@@ -609,6 +641,15 @@ public:
     iterator end()
     {
         return iterator(nullptr, leaf_end, 0);
+    }
+    reverse_iterator rbegin()
+    {
+        return reverse_iterator(leaf_end, nullptr, 0);
+    }
+    reverse_iterator rend()
+    {
+        // return reverse_iterator(iterator(leaf_start, leaf_end, 0));
+        return reverse_iterator(nullptr, leaf_start, 0);
     }
     // // ...
     // // begin,end => in_begin,in_end

@@ -30,4 +30,22 @@ int main()
     for (auto i : b)
         cout << i << "\t";
     cout << "\n";
+    // auto it = b.end();
+    for(auto it=b.find(8);it!=b.begin();--it)
+    {
+        cout<<*it<<"\t";
+    }
+    // auto rit = b.rend();
+    // cout<<*rit<<"\n";
+    // for (auto i = b.rbegin(); 
+    //     i != b.rend(); ++i ) { 
+    //         cout<<*i<<"\t";
+    //         if(*i==1)
+    //         {
+    //             break;
+    //         }
+    // } 
+    cout << "\n";
+
+
 }
