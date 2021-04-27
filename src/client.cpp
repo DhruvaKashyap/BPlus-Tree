@@ -30,6 +30,14 @@ int main()
     for (auto i : b)
         cout << i << "\t";
     cout << "\n";
+
+    for(int i=1; i<=8; i++)
+    {
+        b.delete_key_temp(i);
+        for (auto j : b)
+            cout << j << "\t";
+        cout << "\n";
+    }
     // auto it = b.end();
     for(auto it=b.find(8);it!=b.begin();--it)
     {

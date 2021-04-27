@@ -111,11 +111,18 @@ private:
         }
         left->parent->active_keys--;
 
-        for(int i=0; i<=left->active_keys; i++)
+        for(int i=0; i<=left->active_keys && left->children[i]; i++)
         {
             left->children[i]->parent = left;
         }
-        // TODO - freeing, prev, next, missing a pointer?
+
+        left->next = right->next;
+        if(left->next)
+        {
+            left->next->prev = left;
+        }
+        // TODO - freeing, missing a pointer?
+        cout<<"merge\n";
     }
 
     void reDistribute(Node* left, Node* right, int leftNodePos, int curr)
@@ -147,7 +154,7 @@ private:
                 right->children[right->active_keys-1] = right->children[right->active_keys];
                 right->active_keys--;
             }
-        } //TODO
+        } //TODO - refactor
         else
         {
             for(int j = right->active_keys-1; j >= 0; j--)
@@ -168,7 +175,8 @@ private:
             right->children[0] = left->children[left->active_keys];
             left->parent->key[leftNodePos] = left->key[left->active_keys-1];
             left->active_keys--;
-        } 
+        }
+        cout<<"rd\n";
     }
 
     void delete_rec(Node *node, T key, int nodePos)
@@ -226,7 +234,7 @@ private:
 
         if(node->parent && node->active_keys < ((N+1)/2 - 1))
         {
-            node* nb;
+            Node* nb;
             if(nodePos == 0)
             {
                 nb = node->parent->children[1];
@@ -256,11 +264,6 @@ private:
         }
 
         //TODO
-    }
-    
-    void delete_key_temp(T key) 
-    {
-        delete_rec(root, key, 0);
     }
 
     int insert_key_node_at(T key, Node *p, int loc = 0)
@@ -602,6 +605,12 @@ class reverse_iterator : public iterator
             insert_key(*i);
             ++i;
         }
+    }
+
+    void delete_key_temp(T key) 
+    {
+        delete_rec(root, key, 0);
+        print_tree(root);
     }
 
     iterator delete_key(T key) {}
