@@ -31,29 +31,32 @@ int main()
         cout << i << "\t";
     cout << "\n";
 
-    for(int i=1; i<=8; i++)
+    for (int i = 1; i <= 8; i++)
     {
         b.delete_key_temp(i);
         for (auto j : b)
             cout << j << "\t";
         cout << "\n";
     }
+    cout << "Final\n";
+    for (auto i : b)
+        cout << i << '\t';
+    cout << "\n";
     // auto it = b.end();
     for(auto it=b.find(8);it!=b.begin();--it)
     {
+        cout<<"hey!\n";
         cout<<*it<<"\t";
     }
     // auto rit = b.rend();
     // cout<<*rit<<"\n";
-    // for (auto i = b.rbegin(); 
-    //     i != b.rend(); ++i ) { 
+    // for (auto i = b.rbegin();
+    //     i != b.rend(); ++i ) {
     //         cout<<*i<<"\t";
     //         if(*i==1)
     //         {
     //             break;
     //         }
-    // } 
+    // }
     cout << "\n";
-
-
 }

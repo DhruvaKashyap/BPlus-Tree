@@ -40,6 +40,7 @@ class B_Plus_tree
 public:
     class iterator;
     class reverse_iterator;
+
 private:
     struct Node
     {
@@ -88,54 +89,54 @@ private:
     Node *leaf_end = nullptr;
     size_t nums = 0;
 
-    void myMerge(Node* left, Node* right, int leftNodePos)
+    void myMerge(Node *left, Node *right, int leftNodePos)
     {
-        if(!left->is_leaf)
+        if (!left->is_leaf)
         {
             left->key[left->active_keys] = left->parent->key[leftNodePos];
             left->active_keys++;
         }
 
-        for(int j = 0; j < right->active_keys; j++)
+        for (int j = 0; j < right->active_keys; j++)
         {
             left->key[left->active_keys + j] = right->key[j];
             left->children[left->active_keys + j] = right->children[j];
         }
         left->active_keys += right->active_keys;
         left->children[left->active_keys] = right->children[right->active_keys];
-        
-        for(int j = leftNodePos; j < left->parent->active_keys - 1; j++)
-        {
-            left->parent->key[j] = left->parent->key[j+1];
-            left->parent->children[j+1] = left->parent->children[j+2];
-        }
-        left->parent->active_keys--;
 
-        for(int i=0; i<=left->active_keys && left->children[i]; i++)
+        for (int j = leftNodePos; j < left->parent->active_keys - 1; j++)
+        {
+            left->parent->key[j] = left->parent->key[j + 1];
+            left->parent->children[j + 1] = left->parent->children[j + 2];
+        }
+        left->parent->children[left->parent->active_keys] = nullptr;
+        left->parent->active_keys--;
+        for (int i = 0; i <= left->active_keys && left->children[i]; i++)
         {
             left->children[i]->parent = left;
         }
 
         left->next = right->next;
-        if(left->next)
+        if (left->next)
         {
             left->next->prev = left;
         }
         // TODO - freeing, missing a pointer?
-        cout<<"merge\n";
+        cout << "merge\n";
     }
 
-    void reDistribute(Node* left, Node* right, int leftNodePos, int curr)
+    void reDistribute(Node *left, Node *right, int leftNodePos, int curr)
     {
-        if(curr == 0)
+        if (curr == 0)
         {
-            if(left->is_leaf)
+            if (left->is_leaf)
             {
                 left->key[left->active_keys] = right->key[0];
                 left->active_keys++;
-                for(int j = 0; j < right->active_keys - 1; j++)
+                for (int j = 0; j < right->active_keys - 1; j++)
                 {
-                    right->key[j] = right->key[j+1];
+                    right->key[j] = right->key[j + 1];
                 }
                 right->active_keys--;
                 left->parent->key[leftNodePos] = right->key[0];
@@ -146,26 +147,26 @@ private:
                 left->active_keys++;
                 left->children[left->active_keys] = right->children[0];
                 left->parent->key[leftNodePos] = right->key[0];
-                for(int j = 0; j < right->active_keys - 1; j++)
+                for (int j = 0; j < right->active_keys - 1; j++)
                 {
-                    right->key[j] = right->key[j+1];
-                    right->children[j] = right->children[j+1];
+                    right->key[j] = right->key[j + 1];
+                    right->children[j] = right->children[j + 1];
                 }
-                right->children[right->active_keys-1] = right->children[right->active_keys];
+                right->children[right->active_keys - 1] = right->children[right->active_keys];
                 right->active_keys--;
             }
         } //TODO - refactor
         else
         {
-            for(int j = right->active_keys-1; j >= 0; j--)
+            for (int j = right->active_keys - 1; j >= 0; j--)
             {
-                right->key[j+1] = right->key[j];
-                right->children[j+2] = right->children[j+1];
+                right->key[j + 1] = right->key[j];
+                right->children[j + 2] = right->children[j + 1];
             }
             right->children[1] = right->children[0];
-            if(left->is_leaf)
+            if (left->is_leaf)
             {
-                right->key[0] = left->key[left->active_keys-1];
+                right->key[0] = left->key[left->active_keys - 1];
             }
             else
             {
@@ -173,73 +174,77 @@ private:
             }
             right->active_keys++;
             right->children[0] = left->children[left->active_keys];
-            left->parent->key[leftNodePos] = left->key[left->active_keys-1];
+            left->parent->key[leftNodePos] = left->key[left->active_keys - 1];
             left->active_keys--;
         }
-        cout<<"rd\n";
+        cout << "rd\n";
     }
 
     void delete_rec(Node *node, T key, int nodePos)
     {
         int flag = 0;
-        
-        if(!node->is_leaf)
+
+        if (!node->is_leaf)
         {
-            for(int i=0; i<node->active_keys; i++)
+            for (int i = 0; i < node->active_keys; i++)
             {
-                if(key < node->key[i])
+                if (key < node->key[i])
                 {
                     delete_rec(node->children[i], key, i);
                     flag = 1;
                     break;
                 }
             }
-            if(!flag)
+            if (!flag)
             {
                 delete_rec(node->children[node->active_keys], key, node->active_keys);
             }
         }
         else
         {
-            for(int i=0; i<node->active_keys; i++)
+            for (int i = 0; i < node->active_keys; i++)
             {
-                if(key == node->key[i])
+                if (key == node->key[i])
                 {
-                    for(int j = i; j < node->active_keys-1; j++)
+                    for (int j = i; j < node->active_keys - 1; j++)
                     {
-                        node->key[j] = node->key[j+1];
+                        node->key[j] = node->key[j + 1];
                     }
                     node->active_keys--;
                     break;
                 }
             }
         }
-        
-        if(node->parent == nullptr)
+
+        if (node->parent == nullptr)
         {
-            if(node->is_leaf)
+            if (node->is_leaf)
             {
+                if (!node->active_keys)
+                {
+                    leaf_start = leaf_end = root = nullptr;
+                }
                 return;
             }
             else
             {
-                if(!node->active_keys)
+                if (!node->active_keys)
                 {
                     root = node->children[0];
                     root->parent = nullptr;
                     return;
                 }
-            } 
+            }
         }
 
-        if(node->parent && node->active_keys < ((N+1)/2 - 1))
+        if (node->parent && node->active_keys < ((N + 1) / 2 - 1))
         {
-            Node* nb;
-            if(nodePos == 0)
+            Node *nb;
+            if (nodePos == 0)
             {
                 nb = node->parent->children[1];
-                if( (node->is_leaf && nb->active_keys <= (N/2 + 1)) ||
-                    (!node->is_leaf && nb->active_keys <= N/2) )
+                if ((node->is_leaf && nb->active_keys <= (N / 2 + 1)) ||
+                    (!node->is_leaf && nb->active_keys <= N / 2))
                 {
                     myMerge(node, nb, 0);
                 }
@@ -251,14 +256,14 @@ private:
             else
             {
                 nb = node->parent->children[nodePos - 1];
-                if( (node->is_leaf && nb->active_keys <= (N/2 + 1)) ||
-                    (!node->is_leaf && nb->active_keys <= N/2) )
+                if ((node->is_leaf && nb->active_keys <= (N / 2 + 1)) ||
+                    (!node->is_leaf && nb->active_keys <= N / 2))
                 {
-                    myMerge(nb, node, nodePos-1);
+                    myMerge(nb, node, nodePos - 1);
                 }
                 else
                 {
-                    reDistribute(nb, node, nodePos-1, 1);
+                    reDistribute(nb, node, nodePos - 1, 1);
                 }
             }
         }
@@ -491,34 +496,35 @@ public:
         }
     };
 
-class reverse_iterator : public iterator
-{ 
+    class reverse_iterator : public iterator
+    {
     protected:
-    reverse_iterator(Node *n, Node *e, int j) : iterator{n,e,j}
-    {
-    }
-    friend class B_Plus_tree<T, N, Compare, Alloc>;
+        reverse_iterator(Node *n, Node *e, int j) : iterator{n, e, j}
+        {
+        }
+        friend class B_Plus_tree<T, N, Compare, Alloc>;
+
     public:
-    iterator &operator++()
-    {
-        return iterator::operator--();
-    }
-    iterator operator++(int)
-    {
-        // return it--;
-        return iterator::operator--(1);
-    }
-    reverse_iterator &operator--()
-    {
-        // return ++i;
-        return iterator::operator++();
-    }
-    reverse_iterator operator--(int)
-    {
-        // return i++;
-        return iterator::operator++(1);
-    }
-};
+        iterator &operator++()
+        {
+            return iterator::operator--();
+        }
+        iterator operator++(int)
+        {
+            // return it--;
+            return iterator::operator--(1);
+        }
+        reverse_iterator &operator--()
+        {
+            // return ++i;
+            return iterator::operator++();
+        }
+        reverse_iterator operator--(int)
+        {
+            // return i++;
+            return iterator::operator++(1);
+        }
+    };
     // traits
     // iters
     // ctors
@@ -607,7 +613,7 @@ class reverse_iterator : public iterator
         }
     }
 
-    void delete_key_temp(T key) 
+    void delete_key_temp(T key)
     {
         delete_rec(root, key, 0);
         print_tree(root);
