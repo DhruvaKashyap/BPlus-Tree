@@ -97,7 +97,7 @@ private:
             left->active_keys++;
         }
 
-        for (int j = 0; j < right->active_keys; j++)
+        for (int j = 0; j < right->active_keys; ++j)
         {
             left->key[left->active_keys + j] = right->key[j];
             left->children[left->active_keys + j] = right->children[j];
@@ -105,14 +105,15 @@ private:
         left->active_keys += right->active_keys;
         left->children[left->active_keys] = right->children[right->active_keys];
 
-        for (int j = leftNodePos; j < left->parent->active_keys - 1; j++)
+        for (int j = leftNodePos; j < left->parent->active_keys - 1; ++j)
         {
             left->parent->key[j] = left->parent->key[j + 1];
             left->parent->children[j + 1] = left->parent->children[j + 2];
         }
         left->parent->children[left->parent->active_keys] = nullptr;
         left->parent->active_keys--;
-        for (int i = 0; i <= left->active_keys && left->children[i]; i++)
+
+        for (int i = 0; i <= left->active_keys && left->children[i]; ++i)
         {
             left->children[i]->parent = left;
         }
@@ -122,7 +123,8 @@ private:
         {
             left->next->prev = left;
         }
-        // TODO - freeing, missing a pointer?
+
+        delete right;
         cout << "merge\n";
     }
 
@@ -133,29 +135,29 @@ private:
             if (left->is_leaf)
             {
                 left->key[left->active_keys] = right->key[0];
-                left->active_keys++;
-                for (int j = 0; j < right->active_keys - 1; j++)
-                {
-                    right->key[j] = right->key[j + 1];
-                }
-                right->active_keys--;
-                left->parent->key[leftNodePos] = right->key[0];
             }
             else
             {
                 left->key[left->active_keys] = left->parent->key[leftNodePos];
-                left->active_keys++;
-                left->children[left->active_keys] = right->children[0];
-                left->parent->key[leftNodePos] = right->key[0];
-                for (int j = 0; j < right->active_keys - 1; j++)
-                {
-                    right->key[j] = right->key[j + 1];
-                    right->children[j] = right->children[j + 1];
-                }
-                right->children[right->active_keys - 1] = right->children[right->active_keys];
-                right->active_keys--;
             }
-        } //TODO - refactor
+            left->active_keys++;
+            left->children[left->active_keys] = right->children[0];
+            if (left->is_leaf)
+            {
+                left->parent->key[leftNodePos] = right->key[1]; 
+            }
+            else
+            {
+                left->parent->key[leftNodePos] = right->key[0]; 
+            }
+            for (int j = 0; j < right->active_keys - 1; ++j)
+            {
+                right->key[j] = right->key[j + 1];
+                right->children[j] = right->children[j + 1];
+            }
+            right->children[right->active_keys - 1] = right->children[right->active_keys];
+            right->active_keys--;
+        }
         else
         {
             for (int j = right->active_keys - 1; j >= 0; j--)
@@ -174,21 +176,23 @@ private:
             }
             right->active_keys++;
             right->children[0] = left->children[left->active_keys];
+            left->children[left->active_keys] = nullptr;
             left->parent->key[leftNodePos] = left->key[left->active_keys - 1];
             left->active_keys--;
         }
-        cout << "rd\n";
+        cout << "redistribute\n";
     }
 
     void delete_rec(Node *node, T key, int nodePos)
     {
         int flag = 0;
+        //int idk = node->key[0];
 
         if (!node->is_leaf)
         {
-            for (int i = 0; i < node->active_keys; i++)
+            for (int i = 0; i < node->active_keys; ++i)
             {
-                if (key < node->key[i])
+                if (Compare()(key, node->key[i]))
                 {
                     delete_rec(node->children[i], key, i);
                     flag = 1;
@@ -202,11 +206,11 @@ private:
         }
         else
         {
-            for (int i = 0; i < node->active_keys; i++)
+            for (int i = 0; i < node->active_keys; ++i)
             {
-                if (key == node->key[i])
+                if (!Compare()(key, node->key[i]) && !Compare()(node->key[i], key))
                 {
-                    for (int j = i; j < node->active_keys - 1; j++)
+                    for (int j = i; j < node->active_keys - 1; ++j)
                     {
                         node->key[j] = node->key[j + 1];
                     }
@@ -222,6 +226,7 @@ private:
             {
                 if (!node->active_keys)
                 {
+                    delete node;
                     leaf_start = leaf_end = root = nullptr;
                 }
                 return;
@@ -231,6 +236,7 @@ private:
                 if (!node->active_keys)
                 {
                     root = node->children[0];
+                    delete node;
                     root->parent = nullptr;
                     return;
                 }
@@ -239,36 +245,54 @@ private:
 
         if (node->parent && node->active_keys < ((N + 1) / 2 - 1))
         {
-            Node *nb;
+            Node *n1;
+            Node *n2;
+            Node* nb;
+            int i1, i2;
             if (nodePos == 0)
             {
                 nb = node->parent->children[1];
-                if ((node->is_leaf && nb->active_keys <= (N / 2 + 1)) ||
-                    (!node->is_leaf && nb->active_keys <= N / 2))
-                {
-                    myMerge(node, nb, 0);
-                }
-                else
-                {
-                    reDistribute(node, nb, 0, 0);
-                }
+                n1 = node;
+                n2 = node->parent->children[1];
+                i1 = 0;
+                i2 = 0;
             }
             else
             {
                 nb = node->parent->children[nodePos - 1];
-                if ((node->is_leaf && nb->active_keys <= (N / 2 + 1)) ||
-                    (!node->is_leaf && nb->active_keys <= N / 2))
-                {
-                    myMerge(nb, node, nodePos - 1);
-                }
-                else
-                {
-                    reDistribute(nb, node, nodePos - 1, 1);
-                }
+                n1 = node->parent->children[nodePos - 1];
+                n2 = node;
+                i1 = nodePos - 1;
+                i2 = 1;
+            }
+
+            if ((node->is_leaf && nb->active_keys <= (N / 2 + 1)) ||
+                (!node->is_leaf && nb->active_keys <= N / 2))
+            {
+                myMerge(n1, n2, i1);
+            }
+            else
+            {
+                reDistribute(n1, n2, i1, i2);
             }
         }
-
-        //TODO
+        // where are the deletions in internal nodes happening?
+        //TODO - test redistribute
+        /*TODO
+        Node* temp = node->parent;
+        while(temp)
+        {
+            for(int i=0; i<temp->active_keys; ++i)
+            {
+                if(!Compare()(temp->key[i], idk) && !Compare()(idk, temp->key[i]))
+                {
+                    temp->key[i] = node->key[0];
+                    break;
+                }
+            }
+            temp = temp->parent;
+        }
+        */
     }
 
     int insert_key_node_at(T key, Node *p, int loc = 0)
@@ -521,7 +545,7 @@ public:
         }
         reverse_iterator operator--(int)
         {
-            // return i++;
+            // return ++i;
             return iterator::operator++(1);
         }
     };
