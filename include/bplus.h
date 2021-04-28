@@ -431,7 +431,7 @@ private:
     }
 
 public:
-    class iterator : public std::iterator<std::bidirectional_iterator_tag, T>
+    class iterator
     {
         Node *ptr;
         Node *end;
@@ -444,6 +444,9 @@ public:
     public:
         using value_type = T;
         using iterator_category = bidirectional_iterator_tag;
+        using difference_type = ptrdiff_t;
+        using pointer = T *;
+        using reference = const T &;
         friend bool operator==(const iterator &lhs, const iterator &rhs)
         {
             return lhs.ptr == rhs.ptr && lhs.index == rhs.index;
@@ -480,7 +483,6 @@ public:
         }
         iterator &operator--()
         {
-            // cout<<"operator--\n";
             if (ptr)
             {
                 if (index > 0)
@@ -489,11 +491,8 @@ public:
                 }
                 else
                 {
-                    if (ptr->prev)
-                    {
-                        index = ptr->prev->active_keys - 1;
-                        ptr = ptr->prev;
-                    }
+                    ptr = ptr->prev;
+                    index = ptr ? ptr->active_keys - 1 : 0;
                 }
             }
             else
@@ -514,39 +513,62 @@ public:
             --*this;
             return temp;
         }
-        T operator*()
+        reference operator*()
         {
+            // cout << ptr << ' ' << index << "s\n";
             return ptr->key[index];
         }
     };
 
-    class reverse_iterator : public iterator
+    class reverse_iterator
     {
+        iterator base;
+
     protected:
-        reverse_iterator(Node *n, Node *e, int j) : iterator{n, e, j}
+        reverse_iterator(Node *n, Node *e, int j) : base{n, e, j}
         {
         }
         friend class B_Plus_tree<T, N, Compare, Alloc>;
 
     public:
-        iterator &operator++()
+        using value_type = T;
+        using iterator_category = bidirectional_iterator_tag;
+        using difference_type = ptrdiff_t;
+        using pointer = T *;
+        using reference = const T &;
+        friend bool operator==(const reverse_iterator &lhs, const reverse_iterator &rhs)
         {
-            return iterator::operator--();
+            return lhs.base == rhs.base;
         }
-        iterator operator++(int)
+        friend bool operator!=(const reverse_iterator &lhs, const reverse_iterator &rhs)
         {
-            // return it--;
-            return iterator::operator--(1);
+            return !(lhs == rhs);
+        }
+        reverse_iterator &operator++()
+        {
+            --base;
+            return *this;
+        }
+        reverse_iterator operator++(int)
+        {
+            reverse_iterator temp(*this);
+            --base;
+            return temp;
         }
         reverse_iterator &operator--()
         {
-            // return ++i;
-            return iterator::operator++();
+            ++base;
+            return *this;
         }
         reverse_iterator operator--(int)
         {
-            // return ++i;
-            return iterator::operator++(1);
+            reverse_iterator temp(*this);
+            ++base;
+            return temp;
+        }
+        reference operator*()
+        {
+            return *base;
         }
     };
     // traits
@@ -640,7 +662,9 @@ public:
     void delete_key_temp(T key)
     {
         delete_rec(root, key, 0);
+#if DEBUG
         print_tree(root);
+#endif
     }
 
     iterator delete_key(T key) {}
@@ -660,9 +684,9 @@ public:
         while (temp)
         {
             i = 0;
-            while (i < temp->active_keys && temp->key[i] <= key)
+            while (i < temp->active_keys && temp->key[i] <= key) //predicates
             {
-                if (temp->key[i] == key && temp->is_leaf)
+                if (temp->key[i] == key && temp->is_leaf) //predicate??
                 {
                     return iterator(temp, leaf_end, i);
                 }
@@ -683,13 +707,20 @@ public:
     }
     reverse_iterator rbegin()
     {
-        return reverse_iterator(leaf_end, nullptr, 0);
+        return reverse_iterator(leaf_end, leaf_start, leaf_start->active_keys - 1);
     }
     reverse_iterator rend()
     {
-        // return reverse_iterator(iterator(leaf_start, leaf_end, 0));
         return reverse_iterator(nullptr, leaf_start, 0);
     }
+    // std::reverse_iterator<iterator> rbegin()
+    // {
+    //     return std::reverse_iterator<iterator>(iterator(leaf_end, leaf_start, leaf_start->active_keys));
+    // }
+    // std::reverse_iterator<iterator> rend()
+    // {
+    //     return std::reverse_iterator<iterator>(iterator(leaf_start, leaf_start, 0));
+    // }
     // // ...
     // // begin,end => in_begin,in_end
     // // rbegin, rend

@@ -7,7 +7,8 @@
 #include <chrono>
 using namespace std;
 using namespace std::chrono;
-template<class T> struct TypeIsInt
+template <class T>
+struct TypeIsInt
 {
     static const bool value = false;
 };
@@ -148,6 +149,46 @@ public:
             v.clear();
             b.clear();
             s.clear();
+        }
+        return 1;
+    }
+    bool nonOccuringDelete()
+    {
+        vector<Type> v;
+        vector<Type> dd;
+        default_random_engine generator(chrono::system_clock::now().time_since_epoch().count());
+        uniform_int_distribution<Type> distribution(-N, N);
+        int T(Tmin);
+        while (T < Tmax)
+        {
+            for (int j = 0; j < T; ++j)
+                v.push_back(distribution(generator));
+            for (int j = 0; j < T; ++j)
+                dd.push_back(distribution(generator));
+            B_Plus_tree<Type, d, pp> b(begin(v), end(v));
+            for (Type i : dd)
+            {
+                if (find(begin(v), end(v), i) == v.end())
+                    b.delete_key_temp(i);
+                if (!equal(begin(v), end(v), begin(b), end(b)))
+                {
+                    cout << "Non Occuring delete Failed " << T << "\n";
+                    for (auto i : b)
+                        cout << i << '\t';
+                    cout << '\n';
+                    for (auto i : v)
+                        cout << i << '\t';
+                    cout << '\n';
+                    return 0;
+                }
+            }
+            if (equal(begin(v), end(v), begin(b), end(b)))
+            {
+                cout << "Non Occuring Delete Passed " << T << "\n";
+            }
+            v.clear();
+            dd.clear();
+            ++T;
         }
         return 1;
     }

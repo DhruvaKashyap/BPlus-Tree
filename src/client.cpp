@@ -43,10 +43,10 @@ int main()
         cout << i << '\t';
     cout << "\n";
     // auto it = b.end();
-    for(auto it=b.find(8);it!=b.begin();--it)
+    for (auto it = b.find(8); it != b.begin(); --it)
     {
-        cout<<"hey!\n";
-        cout<<*it<<"\t";
+        cout << "hey!\n";
+        cout << *it << "\t";
     }
     // auto rit = b.rend();
     // cout<<*rit<<"\n";

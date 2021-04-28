@@ -17,6 +17,7 @@ int main()
     test<type, pp<type>> ts;
     ts.sortedInsertionTest();
     ts.reverseSortedTest();
-    ts.randomInsertionTest();
+    // ts.randomInsertionTest();
+    ts.nonOccuringDelete();
     return 0;
 }
