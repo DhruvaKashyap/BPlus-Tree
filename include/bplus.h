@@ -125,7 +125,7 @@ private:
         }
 
         delete right;
-        cout << "merge\n";
+        // cout << "merge\n";
     }
 
     void reDistribute(Node *left, Node *right, int leftNodePos, int curr)

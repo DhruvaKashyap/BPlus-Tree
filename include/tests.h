@@ -24,8 +24,8 @@ class test
 {
     const int N = 100000;
     const int trials = 1000;
-    const int Tmin = 1;
-    const int Tmax = 1000;
+    const int Tmin = 100;
+    const int Tmax = 200;
 
 public:
     test()
@@ -97,7 +97,7 @@ public:
         set<Type, pp> s;
         B_Plus_tree<Type, d, pp> b;
         long i(1);
-        default_random_engine generator(chrono::system_clock::now().time_since_epoch().count());
+        mt19937 generator(chrono::system_clock::now().time_since_epoch().count());
         uniform_int_distribution<Type> distribution(-N, N);
         int T(Tmin);
         while (T < Tmax)
@@ -154,25 +154,28 @@ public:
     }
     bool nonOccuringDelete()
     {
-        vector<Type> v;
-        vector<Type> dd;
-        default_random_engine generator(chrono::system_clock::now().time_since_epoch().count());
+        mt19937 generator(chrono::system_clock::now().time_since_epoch().count());
         uniform_int_distribution<Type> distribution(-N, N);
         int T(Tmin);
         while (T < Tmax)
         {
+            set<Type, pp> v;
+            vector<Type> dd;
             for (int j = 0; j < T; ++j)
-                v.push_back(distribution(generator));
-            for (int j = 0; j < T; ++j)
+                v.insert(distribution(generator));
+            for (int j = 0; j < 10 * T; ++j)
                 dd.push_back(distribution(generator));
+            int k(0);
             B_Plus_tree<Type, d, pp> b(begin(v), end(v));
             for (Type i : dd)
             {
                 if (find(begin(v), end(v), i) == v.end())
                     b.delete_key_temp(i);
+                else
+                    ++k;
                 if (!equal(begin(v), end(v), begin(b), end(b)))
                 {
-                    cout << "Non Occuring delete Failed " << T << "\n";
+                    cout << "Non Occuring delete Failed " << T << " deleting " << i << "\n";
                     for (auto i : b)
                         cout << i << '\t';
                     cout << '\n';
@@ -182,10 +185,44 @@ public:
                     return 0;
                 }
             }
-            if (equal(begin(v), end(v), begin(b), end(b)))
+            // cout << k << " misses " << T << "/" << 10 * T << '\n';
+            v.clear();
+            dd.clear();
+            ++T;
+        }
+        cout << "Non Occuring Delete Passed\n";
+        return 1;
+    }
+    bool RandomDelete()
+    {
+        mt19937 generator(chrono::system_clock::now().time_since_epoch().count());
+        uniform_int_distribution<Type> distribution(-N, N);
+        int T(Tmin);
+        while (T < Tmax)
+        {
+            set<Type, pp> v;
+            for (int j = 0; j < T; ++j)
+                v.insert(distribution(generator));
+            vector<Type> dd(begin(v), end(v));
+            B_Plus_tree<Type, d, pp> b(begin(v), end(v));
+            shuffle(begin(dd), end(dd), generator);
+            for (Type i : dd)
             {
-                cout << "Non Occuring Delete Passed " << T << "\n";
+                b.delete_key_temp(i);
+                v.erase(i);
+                if (!equal(begin(v), end(v), begin(b), end(b)))
+                {
+                    cout << "Random delete Failed " << T << " deleting " << i << "\n";
+                    for (auto i : v)
+                        cout << i << '\t';
+                    cout << '\n';
+                    // for (auto i : b)
+                    //     cout << i << '\t';
+                    // cout << '\n';
+                    return 0;
+                }
             }
+            cout << "Random Delete Passed " << T << "\n";
             v.clear();
             dd.clear();
             ++T;

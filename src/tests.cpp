@@ -15,9 +15,10 @@ using type = int;
 int main()
 {
     test<type, pp<type>> ts;
-    ts.sortedInsertionTest();
-    ts.reverseSortedTest();
+    // ts.sortedInsertionTest();
+    // ts.reverseSortedTest();
     // ts.randomInsertionTest();
     ts.nonOccuringDelete();
+    ts.RandomDelete();
     return 0;
 }
