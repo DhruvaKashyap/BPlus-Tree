@@ -384,7 +384,7 @@ private:
             root->active_keys = 1;
             root->is_leaf = true;
             ++nums;
-            return make_pair(iterator(root, leaf_end, 0), false);
+            return make_pair(iterator(root, leaf_end, 0), true);
         }
         else
         {
@@ -411,7 +411,7 @@ private:
                 split_push_up(target, target->key[N / 2]);
             }
             ++nums;
-            return make_pair(iterator(p, leaf_end, i), false);
+            return make_pair(iterator(p, leaf_end, i), true);
         }
         //return iterator; iterator has p and i
     }
@@ -585,8 +585,21 @@ public:
     // ctors
     // more traits to be added
     using value_type = T;
+    using size_type = size_t;
+    using difference_type = std::ptrdiff_t;
+    using value_compare = Compare;
+    using reference =  value_type&;
+    using const_reference = const value_type&;
+    using pointer = std::allocator_traits<Alloc>::pointer;
+    using iterator = iterator;
+    using reverse_iterator = reverse_iterator;
+    using const_iterator = const iterator;
+    using const_reverse_iterator = const reverse_iterator;
 
-    B_Plus_tree() {}
+    B_Plus_tree() {
+        root = nullptr;
+        __degree = N;
+    }
 
     explicit B_Plus_tree(std::initializer_list<T> l)
     {
@@ -614,7 +627,8 @@ public:
             }
             leaf_end->next = nullptr;
             Node *p = leaf_start->next;
-            p->prev = leaf_start;
+            if(p)
+                p->prev = leaf_start;
             while (p)
             {
                 if (p->next)
@@ -668,18 +682,72 @@ public:
     //ass ctor
     B_Plus_tree<T, N, Compare, Alloc> &operator=(const B_Plus_tree<T, N, Compare, Alloc> &rhs)
     {
-        if (this != rhs)
+        if (this != &rhs)
         {
             delete_tree(root);
+            __degree = rhs.__degree;
+            nums = rhs.nums;
+            if(rhs.root)
+            {
+                root = new Node;
+                recursive_copy(rhs.root, &root);
+                Node *t(leaf_start);
+                leaf_start->prev = nullptr;
+                auto i = ++rhs.begin();
+                while (i != rhs.end())
+                {
+                    t->next = this->find(*i).ptr;
+                    t = t->next;
+                    ++i;
+                }
+                leaf_end->next = nullptr;
+                Node *p = leaf_start->next;
+                if(p)
+                    p->prev = leaf_start;
+                while (p)
+                {
+                    if (p->next)
+                        p->next->prev = p;
+                    p = p->next;
+                }
+            }
         }
-        return this;
+        return *this;
     }
 
     //move ctor
-    B_Plus_tree(B_Plus_tree<T, N, Compare, Alloc> &&copy) {}
+    B_Plus_tree(B_Plus_tree<T, N, Compare, Alloc> &&copy) {
+
+        root = copy.root;
+        copy.root = nullptr;
+        __degree = copy.__degree;
+        nums = copy.nums;
+        leaf_start = copy.leaf_start;
+        leaf_end = copy.leaf_end;
+        copy.leaf_end = nullptr;
+        copy.leaf_start = nullptr;
+    }
 
     //move ass
-    B_Plus_tree<T, N, Compare, Alloc> &operator=(B_Plus_tree<T, N, Compare, Alloc> &&rhs) {}
+    B_Plus_tree<T, N, Compare, Alloc> &operator=(B_Plus_tree<T, N, Compare, Alloc> &&rhs) {
+
+        if(this!=&rhs)
+        {
+            delete_tree(root);
+            root = rhs.root;
+            rhs.root = nullptr;
+            
+            __degree = rhs.__degree;
+            nums = rhs.nums;
+
+            leaf_start = rhs.leaf_start;
+            leaf_end = rhs.leaf_end;
+            rhs.leaf_start = nullptr;
+            rhs.leaf_end = nullptr;
+
+        }
+        return *this;
+    }
 
     //dtor
     ~B_Plus_tree()
@@ -727,16 +795,16 @@ public:
         leaf_start = root = nullptr;
     }
 
-    iterator find(T key)
+    iterator find(T key) const
     {
         Node *temp = root;
-        int i;
+        int i(0);
         while (temp)
         {
             i = 0;
-            while (i < temp->active_keys && temp->key[i] <= key) //predicates
+            while (i < temp->active_keys && !Compare()(key,temp->key[i])) //predicates
             {
-                if (temp->key[i] == key && temp->is_leaf) //predicate??
+                if (temp->is_leaf && !Compare()(temp->key[i], key) && !Compare()(key, temp->key[i]))
                 {
                     return iterator(temp, leaf_end, i);
                 }
@@ -755,29 +823,67 @@ public:
     {
         return iterator(nullptr, leaf_end, 0);
     }
-    // reverse_iterator rbegin()
-    // {
-    //     return reverse_iterator(leaf_end, leaf_start, leaf_end->active_keys - 1);
-    // }
-    // reverse_iterator rend()
-    // {
-    //     return reverse_iterator(nullptr, leaf_start, 0);
-    // }
-    std::reverse_iterator<iterator> rbegin()
+    const iterator cbegin() const
     {
-        return std::reverse_iterator<iterator>(iterator(leaf_end, leaf_start, leaf_end->active_keys));
+        return iterator(leaf_start, leaf_end, 0);
     }
-    std::reverse_iterator<iterator> rend()
+    const iterator cend() const
     {
-        return std::reverse_iterator<iterator>(iterator(leaf_start, leaf_start, 0));
+        return iterator(nullptr, leaf_end, 0);
     }
+    reverse_iterator rbegin() const
+    {
+        return reverse_iterator(leaf_end, leaf_start, leaf_end->active_keys - 1);
+    }
+    reverse_iterator rend() const
+    {
+        return reverse_iterator(nullptr, leaf_start, 0);
+    }
+    const reverse_iterator crbegin() const
+    {
+        return reverse_iterator(leaf_end, leaf_start, leaf_end->active_keys - 1);
+    }
+    const reverse_iterator crend() const
+    {
+        return reverse_iterator(nullptr, leaf_start, 0);
+    }
+    // std::reverse_iterator<iterator> rbegin()
+    // {
+    //     return std::reverse_iterator<iterator>(iterator(leaf_end, leaf_start, leaf_end->active_keys));
+    // }
+    // std::reverse_iterator<iterator> rend()
+    // {
+    //     return std::reverse_iterator<iterator>(iterator(leaf_start, leaf_start, 0));
+    // }
     // // ...
     // // begin,end => in_begin,in_end
     // // rbegin, rend
 
     // // Performing a range query with k elements
     // // find_if
-    int size();
+    size_t size() const
+    {
+        return nums;
+    }
+    bool empty() const
+    {
+        return root==nullptr;
+    }
+    friend bool operator==(const B_Plus_tree<T, N, Compare, Alloc> &lhs,const B_Plus_tree<T, N, Compare, Alloc> &rhs)
+    {
+        auto lhs_it = lhs.begin();
+        auto rhs_it = rhs.begin();
+        while(lhs_it!=lhs.end() && rhs_it!=rhs.end() && *lhs_it==*rhs_it)
+        {
+            ++lhs_it;
+            ++rhs_it;
+        }
+        return lhs_it==lhs.end() and rhs_it==rhs.end();
+    }
+    friend bool operator!=(const B_Plus_tree<T, N, Compare, Alloc> &lhs,const B_Plus_tree<T, N, Compare, Alloc> &rhs)
+    {
+        return !(lhs==rhs);
+    }
 };
 
 #endif
