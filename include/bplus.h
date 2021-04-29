@@ -18,7 +18,7 @@ using namespace std;
 template <int N>
 struct X
 {
-    constexpr static bool value = N > 1;
+    constexpr static bool value = N > 2;
 };
 template <typename T>
 struct Y
@@ -89,7 +89,7 @@ private:
     Node *leaf_end = nullptr;
     size_t nums = 0;
 
-    void myMerge(Node *left, Node *right, int leftNodePos)
+    Node* myMerge(Node *left, Node *right, int leftNodePos)
     {
         if (!left->is_leaf)
         {
@@ -127,8 +127,7 @@ private:
         if (leaf_end == right)
             leaf_end = left;
         delete right;
-
-        //return left;
+        return left;
     }
 
     void reDistribute(Node *left, Node *right, int leftNodePos, int curr)
@@ -195,7 +194,6 @@ private:
             left->parent->key[leftNodePos] = left->key[left->active_keys - 1];
             left->active_keys--;
         }
-        cout << "redistribute\n";
     }
 
     void delete_rec(Node *node, T key, int nodePos)
@@ -284,8 +282,7 @@ private:
             if ((node->is_leaf && nb->active_keys <= (N / 2 + 1)) ||
                 (!node->is_leaf && nb->active_keys <= N / 2))
             {
-                //node = myMerge(n1, n2, i1);
-                myMerge(n1, n2, i1);
+                node = myMerge(n1, n2, i1);
             }
             else
             {
@@ -715,7 +712,6 @@ public:
     void delete_key_temp(T key)
     {
         delete_rec(root, key, 0);
-        cout << "Deleted " << key << '\n';
 #if DEBUG
         print_tree(root);
 #endif

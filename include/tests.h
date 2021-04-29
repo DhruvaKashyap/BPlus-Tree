@@ -4,6 +4,7 @@
 #include <set>
 #include <random>
 #include <algorithm>
+#include <iostream>
 #include <chrono>
 using namespace std;
 using namespace std::chrono;
@@ -22,10 +23,10 @@ struct TypeIsInt<int>
 template <typename Type, typename pp, int d = Y<Type>::value>
 class test
 {
-    const int N = 50;
+    const int N = 100000;
     const int trials = 1000;
-    const int Tmin = 7;
-    const int Tmax = 50;
+    const int Tmin = 1;
+    const int Tmax = 1000;
 
 public:
     test()
@@ -45,7 +46,7 @@ public:
             B_Plus_tree<Type, d, pp> b(begin(v), end(v));
             if (!is_sorted(begin(b), end(b), pp()))
             {
-                cout << "Test(Sort) :" << T << " Failed\n";
+                cout << "Insert(Sort) :" << T << " Failed\n";
                 cout << "E:";
                 sort(begin(v), end(v), pp());
                 for (auto i : v)
@@ -60,7 +61,7 @@ public:
         }
         auto stop = high_resolution_clock::now();
         auto duration = duration_cast<microseconds>(stop - start);
-        cout << "Test(Sort) Passed " << duration.count() << "ms\n";
+        cout << "Insert(Sort) Passed " << duration.count() << "us\n";
         return 0;
     }
     bool reverseSortedTest()
@@ -74,7 +75,7 @@ public:
             B_Plus_tree<Type, d, pp> b(rbegin(v), rend(v));
             if (!is_sorted(begin(b), end(b), pp()))
             {
-                cout << "Test(Rev) :" << T << " Failed\n";
+                cout << "Insert(Rev) :" << T << " Failed\n";
                 cout << "E:";
                 reverse(begin(v), end(v));
                 for (auto i : v)
@@ -89,7 +90,7 @@ public:
         }
         auto stop = high_resolution_clock::now();
         auto duration = duration_cast<microseconds>(stop - start);
-        cout << "Test(Rev) Passed " << duration.count() << "ms\n";
+        cout << "Insert(Rev) Passed " << duration.count() << "us\n";
         return 1;
     }
     bool randomInsertionTest()
@@ -103,14 +104,15 @@ public:
         while (T < Tmax)
         {
             vector<Type> v;
-            auto start = high_resolution_clock::now();
             for (int j = 0; j < T; ++j)
                 v.push_back(distribution(generator));
+            auto start = high_resolution_clock::now();
             for (auto i : v)
             {
                 b.insert(i);
                 s.insert(i);
             }
+            auto stop = high_resolution_clock::now();
             if (!is_sorted(begin(b), end(b), pp()))
             {
                 vector<Type> t1(begin(s), end(s));
@@ -119,7 +121,7 @@ public:
                 sort(begin(t2), end(t2));
                 if (t1 != t2)
                 {
-                    cout << "Test(Rand) :" << i << "/" << trials << ",N:" << T << " Failed\n";
+                    cout << "Insert(Rand) :" << i << "/" << trials << ",N:" << T << " Failed\n";
                     cout << "I:";
                     for (auto i : v)
                         cout << i << "\t";
@@ -141,9 +143,8 @@ public:
             i = (i + 1) % trials;
             if (!(i % trials))
             {
-                auto stop = high_resolution_clock::now();
                 auto duration = duration_cast<microseconds>(stop - start);
-                cout << "Test(Rand): " << T << " Passed " << duration.count() << "ms\n";
+                cout << "Insert(Rand): " << T << " Passed " << duration.count() << "us\n";
                 ++T;
             }
             v.clear();
@@ -197,46 +198,45 @@ public:
     {
         mt19937 generator(chrono::system_clock::now().time_since_epoch().count());
         uniform_int_distribution<Type> distribution(-N, N);
-
-        while (true)
+        int T(Tmin);
+        while (T < Tmax)
         {
-            int T(Tmin);
-            while (T < Tmax)
+            set<Type, pp> s;
+            for (int j = 0; j < T; ++j)
+                s.insert(distribution(generator));
+            vector<Type> dd(begin(s), end(s));
+            B_Plus_tree<Type, d, pp> b(begin(s), end(s));
+            shuffle(begin(dd), end(dd), generator);
+            vector<Type> temp(begin(s), end(s));
+            auto start = high_resolution_clock::now();
+            for (Type i : dd)
             {
-                set<Type, pp> s;
-                for (int j = 0; j < T; ++j)
-                    s.insert(distribution(generator));
-                vector<Type> dd(begin(s), end(s));
-                B_Plus_tree<Type, d, pp> b(begin(s), end(s));
-                shuffle(begin(dd), end(dd), generator);
-                vector<Type> temp(begin(s), end(s));
-                for (Type i : dd)
+                b.delete_key_temp(i);
+                s.erase(i);
+                if (!equal(begin(s), end(s), begin(b), end(b)))
                 {
-                    b.delete_key_temp(i);
-                    s.erase(i);
-                    if (!equal(begin(s), end(s), begin(b), end(b)))
-                    {
-                        cout << "Random delete Failed " << T << " deleting " << i << "\n";
-                        for (auto i : s)
-                            cout << i << '\t';
-                        cout << '\n';
-                        for (auto i : temp)
-                            cout << i << '\t';
-                        cout << '\n';
-                        for (auto i : dd)
-                            cout << i << '\t';
-                        cout << "\n\n\n";
-                        // for (auto i : b)
-                        //     cout << i << '\t';
-                        // cout << '\n';
-                        return 0;
-                    }
+                    cout << "Random delete Failed " << T << " deleting " << i << "\n";
+                    for (auto i : s)
+                        cout << i << '\t';
+                    cout << '\n';
+                    for (auto i : temp)
+                        cout << i << '\t';
+                    cout << '\n';
+                    for (auto i : dd)
+                        cout << i << '\t';
+                    cout << "\n\n\n";
+                    for (auto i : b)
+                        cout << i << '\t';
+                    cout << '\n';
+                    return 0;
                 }
-                cout << "Random Delete Passed " << T << "\n";
-                s.clear();
-                dd.clear();
-                ++T;
             }
+            auto stop = high_resolution_clock::now();
+            auto duration = duration_cast<microseconds>(stop - start);
+            cout << "Delete(Random) " << T << " Passed " << duration.count() << "us\n";
+            s.clear();
+            dd.clear();
+            ++T;
         }
         return 1;
     }

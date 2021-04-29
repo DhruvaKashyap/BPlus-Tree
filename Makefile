@@ -2,7 +2,7 @@ CLIENT=src/client.cpp
 TEST=src/tests.cpp
 HEADER=include/bplus.h
 CXX=g++
-CPPFLAGS = -Wall -std=c++20 -g -pedantic -I include/
+CPPFLAGS = -O3 -Wall -std=c++20 -g -pedantic -I include/
 
 all: a.out
 
