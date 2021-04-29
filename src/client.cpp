@@ -59,4 +59,9 @@ int main()
     //         }
     // }
     cout << "\n";
+
+    B_Plus_tree<int, 5> bt({1,2,3,4,5,6});
+    cout<<"test\n";
+    bt.delete_key_temp(8);
+    bt.delete_key_temp(2);
 }

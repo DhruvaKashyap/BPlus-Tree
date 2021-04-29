@@ -156,6 +156,7 @@ private:
                 right->children[j] = right->children[j + 1];
             }
             right->children[right->active_keys - 1] = right->children[right->active_keys];
+            right->children[right->active_keys] = nullptr;
             right->active_keys--;
         }
         else
@@ -186,7 +187,7 @@ private:
     void delete_rec(Node *node, T key, int nodePos)
     {
         int flag = 0;
-        //int idk = node->key[0];
+        int idk = node->key[0];
 
         if (!node->is_leaf)
         {
@@ -278,7 +279,7 @@ private:
         }
         // where are the deletions in internal nodes happening?
         //TODO - test redistribute
-        /*TODO
+
         Node* temp = node->parent;
         while(temp)
         {
@@ -292,7 +293,6 @@ private:
             }
             temp = temp->parent;
         }
-        */
     }
 
     int insert_key_node_at(T key, Node *p, int loc = 0)
