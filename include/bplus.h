@@ -127,7 +127,8 @@ private:
         if (leaf_end == right)
             leaf_end = left;
         delete right;
-        cout << "merge\n";
+
+        //return left;
     }
 
     void reDistribute(Node *left, Node *right, int leftNodePos, int curr)
@@ -143,7 +144,11 @@ private:
                 left->key[left->active_keys] = left->parent->key[leftNodePos];
             }
             left->active_keys++;
+
             left->children[left->active_keys] = right->children[0];
+            if(left->children[left->active_keys])
+                left->children[left->active_keys]->parent = left;
+
             if (left->is_leaf)
             {
                 left->parent->key[leftNodePos] = right->key[1];
@@ -152,6 +157,7 @@ private:
             {
                 left->parent->key[leftNodePos] = right->key[0];
             }
+
             for (int j = 0; j < right->active_keys - 1; ++j)
             {
                 right->key[j] = right->key[j + 1];
@@ -159,6 +165,7 @@ private:
             }
             right->children[right->active_keys - 1] = right->children[right->active_keys];
             right->children[right->active_keys] = nullptr;
+
             right->active_keys--;
         }
         else
@@ -169,6 +176,7 @@ private:
                 right->children[j + 2] = right->children[j + 1];
             }
             right->children[1] = right->children[0];
+
             if (left->is_leaf)
             {
                 right->key[0] = left->key[left->active_keys - 1];
@@ -178,8 +186,12 @@ private:
                 right->key[0] = left->parent->key[leftNodePos];
             }
             right->active_keys++;
+
             right->children[0] = left->children[left->active_keys];
+            if(right->children[0])
+                right->children[0]->parent = right;
             left->children[left->active_keys] = nullptr;
+
             left->parent->key[leftNodePos] = left->key[left->active_keys - 1];
             left->active_keys--;
         }
@@ -268,10 +280,11 @@ private:
                 i1 = nodePos - 1;
                 i2 = 1;
             }
-
+            
             if ((node->is_leaf && nb->active_keys <= (N / 2 + 1)) ||
                 (!node->is_leaf && nb->active_keys <= N / 2))
             {
+                //node = myMerge(n1, n2, i1);
                 myMerge(n1, n2, i1);
             }
             else
