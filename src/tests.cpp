@@ -14,11 +14,11 @@ struct pp
 using type = int;
 int main()
 {
-    test<type, pp<type>> ts;
+    test<type, pp<type>, 3> ts;
     // ts.sortedInsertionTest();
     // ts.reverseSortedTest();
     // ts.randomInsertionTest();
-    ts.nonOccuringDelete();
+    // ts.nonOccuringDelete();
     ts.RandomDelete();
     return 0;
 }

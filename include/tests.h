@@ -22,10 +22,10 @@ struct TypeIsInt<int>
 template <typename Type, typename pp, int d = Y<Type>::value>
 class test
 {
-    const int N = 100000;
+    const int N = 50;
     const int trials = 1000;
-    const int Tmin = 100;
-    const int Tmax = 200;
+    const int Tmin = 7;
+    const int Tmax = 50;
 
 public:
     test()
@@ -197,35 +197,46 @@ public:
     {
         mt19937 generator(chrono::system_clock::now().time_since_epoch().count());
         uniform_int_distribution<Type> distribution(-N, N);
-        int T(Tmin);
-        while (T < Tmax)
+
+        while (true)
         {
-            set<Type, pp> v;
-            for (int j = 0; j < T; ++j)
-                v.insert(distribution(generator));
-            vector<Type> dd(begin(v), end(v));
-            B_Plus_tree<Type, d, pp> b(begin(v), end(v));
-            shuffle(begin(dd), end(dd), generator);
-            for (Type i : dd)
+            int T(Tmin);
+            while (T < Tmax)
             {
-                b.delete_key_temp(i);
-                v.erase(i);
-                if (!equal(begin(v), end(v), begin(b), end(b)))
+                set<Type, pp> s;
+                for (int j = 0; j < T; ++j)
+                    s.insert(distribution(generator));
+                vector<Type> dd(begin(s), end(s));
+                B_Plus_tree<Type, d, pp> b(begin(s), end(s));
+                shuffle(begin(dd), end(dd), generator);
+                vector<Type> temp(begin(s), end(s));
+                for (Type i : dd)
                 {
-                    cout << "Random delete Failed " << T << " deleting " << i << "\n";
-                    for (auto i : v)
-                        cout << i << '\t';
-                    cout << '\n';
-                    // for (auto i : b)
-                    //     cout << i << '\t';
-                    // cout << '\n';
-                    return 0;
+                    b.delete_key_temp(i);
+                    s.erase(i);
+                    if (!equal(begin(s), end(s), begin(b), end(b)))
+                    {
+                        cout << "Random delete Failed " << T << " deleting " << i << "\n";
+                        for (auto i : s)
+                            cout << i << '\t';
+                        cout << '\n';
+                        for (auto i : temp)
+                            cout << i << '\t';
+                        cout << '\n';
+                        for (auto i : dd)
+                            cout << i << '\t';
+                        cout << "\n\n\n";
+                        // for (auto i : b)
+                        //     cout << i << '\t';
+                        // cout << '\n';
+                        return 0;
+                    }
                 }
+                cout << "Random Delete Passed " << T << "\n";
+                s.clear();
+                dd.clear();
+                ++T;
             }
-            cout << "Random Delete Passed " << T << "\n";
-            v.clear();
-            dd.clear();
-            ++T;
         }
         return 1;
     }

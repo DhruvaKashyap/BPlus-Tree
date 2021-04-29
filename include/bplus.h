@@ -124,8 +124,10 @@ private:
             left->next->prev = left;
         }
 
+        if (leaf_end == right)
+            leaf_end = left;
         delete right;
-        // cout << "merge\n";
+        cout << "merge\n";
     }
 
     void reDistribute(Node *left, Node *right, int leftNodePos, int curr)
@@ -144,11 +146,11 @@ private:
             left->children[left->active_keys] = right->children[0];
             if (left->is_leaf)
             {
-                left->parent->key[leftNodePos] = right->key[1]; 
+                left->parent->key[leftNodePos] = right->key[1];
             }
             else
             {
-                left->parent->key[leftNodePos] = right->key[0]; 
+                left->parent->key[leftNodePos] = right->key[0];
             }
             for (int j = 0; j < right->active_keys - 1; ++j)
             {
@@ -248,7 +250,7 @@ private:
         {
             Node *n1;
             Node *n2;
-            Node* nb;
+            Node *nb;
             int i1, i2;
             if (nodePos == 0)
             {
@@ -279,19 +281,21 @@ private:
         }
         // where are the deletions in internal nodes happening?
         //TODO - test redistribute
-
-        Node* temp = node->parent;
-        while(temp)
+        if (node->is_leaf)
         {
-            for(int i=0; i<temp->active_keys; ++i)
+            Node *temp = node->parent;
+            while (temp)
             {
-                if(!Compare()(temp->key[i], idk) && !Compare()(idk, temp->key[i]))
+                for (int i = 0; i < temp->active_keys; ++i)
                 {
-                    temp->key[i] = node->key[0];
-                    break;
+                    if (!Compare()(temp->key[i], idk) && !Compare()(idk, temp->key[i]))
+                    {
+                        temp->key[i] = node->key[0];
+                        break;
+                    }
                 }
+                temp = temp->parent;
             }
-            temp = temp->parent;
         }
     }
 
@@ -300,7 +304,6 @@ private:
         int i(loc);
         while (i < p->active_keys && Compare()(p->key[i], key))
             ++i;
-
         rotate(std::begin(p->key) + i, std::begin(p->key) + N - 1, std::begin(p->key) + N);
         p->key[i] = key;
         p->active_keys++;
@@ -325,9 +328,7 @@ private:
         else
         {
             pos = insert_key_node_at(median, target->parent);
-            // rotate(target->children + pos, target->children + N , target->children + N + 1);
-            for (int j = N; j > pos; --j)
-                target->parent->children[j] = target->parent->children[j - 1];
+            rotate(target->parent->children + pos + 1, target->parent->children + N, target->parent->children + N + 1); // faster than copy
         }
         nsibling->parent = target->parent;
         target->parent->children[pos + 1] = nsibling;
@@ -335,7 +336,7 @@ private:
         {
             // should median placement depend on predicate?
             // if yes change here and target->active_keys
-            copy(std::begin(target->key) + N / 2, std::begin(target->key) + N, std::begin(nsibling->key)); //end begin no work bottleneck if vector
+            copy(std::begin(target->key) + N / 2, std::begin(target->key) + N, std::begin(nsibling->key));
             if (target->next)
                 target->next->prev = nsibling;
             target->next = nsibling;
@@ -595,8 +596,9 @@ public:
             // cout << "\n";
         }
 #if DEBUG
+        cout << "CTOR\n";
         print_tree(root);
-
+        cout << "\n\n";
 #endif
     }
 
@@ -634,6 +636,8 @@ public:
     //dtor
     ~B_Plus_tree()
     {
+        cout << "DTOR\n";
+        print_tree(root);
         delete_tree(root);
     }
 
@@ -662,6 +666,7 @@ public:
     void delete_key_temp(T key)
     {
         delete_rec(root, key, 0);
+        cout << "Deleted " << key << '\n';
 #if DEBUG
         print_tree(root);
 #endif
