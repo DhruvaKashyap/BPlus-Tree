@@ -26,7 +26,51 @@ int main()
 #if DEBUG
     cout << "DEBUGGING TURNED ON\n";
 #endif
-    // B_Plus_tree<int, 3> b({8, 2, 3, 6, 1, 4, 7, 5});
+    B_Plus_tree<int, 3> b({8, 2, 6, 1, 4, 7, 5});
+    for (auto i : b)
+        cout << i << "\t";
+    cout << "\n";
+    B_Plus_tree<int, 3> c(b);
+    // B_Plus_tree<int, 3> c({8, 2, 3, 6, 1, 4, 7, 5});
+    cout<<"copied tree\n";
+    for (auto i : c)
+        cout << i << "\t";
+    cout << "\n";
+    // b.clear();
+    // b.delete_key_temp(6);
+    b.insert(3);
+    b.insert(10);
+    c.insert(8);
+    cout<<"copied tree after old tree is changed\n";
+    for (auto i : c)
+        cout << i << "\t";
+    cout << "\n";
+    cout<<"old tree\n";
+    for (auto i : b)
+        cout << i << "\t";
+    cout << "\n";
+
+
+
+    // B_Plus_tree<int, 3> b({8, 2});
+    // for (auto i : b)
+    //     cout << i << "\t";
+    // cout << "\n";
+    // B_Plus_tree<int, 3> c(b);
+    // // B_Plus_tree<int, 3> c({8, 2, 3, 6, 1, 4, 7, 5});
+    // cout<<"copied tree\n";
+    // for (auto i : c)
+    //     cout << i << "\t";
+    // cout << "\n";
+    // // b.clear();
+    // // b.delete_key_temp(6);
+    // b.insert(20);
+    // b.insert(50);
+    // cout<<"copied tree after old tree is changed\n";
+    // for (auto i : c)
+    //     cout << i << "\t";
+    // cout << "\n";
+    // cout<<"old tree\n";
     // for (auto i : b)
     //     cout << i << "\t";
     // cout << "\n";
@@ -64,8 +108,4 @@ int main()
     // cout<<"test\n";
     // bt.delete_key_temp(8);
     // bt.delete_key_temp(2);
-    B_Plus_tree<int, 3> b({-49, -48, -33, -24, -13, 3, 12, 32, 36, 43});
-    vector<int> v({-33, 12, 36, -48, 43, -49, -13, 3, 32, -24});
-    for (auto i : v)
-        b.delete_key_temp(i);
 }

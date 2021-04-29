@@ -374,6 +374,7 @@ private:
             root->active_keys = 1;
             root->is_leaf = true;
             ++nums;
+            print_tree(root);
             return make_pair(iterator(root, leaf_end, 0), false);
         }
         else
@@ -390,6 +391,7 @@ private:
                 }
                 if (i < p->active_keys && !Compare()(p->key[i], key) && !Compare()(key, p->key[i]))
                 {
+                    print_tree(root);
                     return make_pair(iterator(p, leaf_end, i), false); //return iterator(p,leaf_end,i),false
                 }
                 target = p;
@@ -401,6 +403,7 @@ private:
                 split_push_up(target, target->key[N / 2]);
             }
             ++nums;
+            print_tree(root);
             return make_pair(iterator(p, leaf_end, i), false);
         }
         //return iterator; iterator has p and i
@@ -602,16 +605,82 @@ public:
 #endif
     }
 
+    // void copy_node(Node* src,Node *dst)
+    // {
+    //     std::copy(src->key,src->key+N,dst->key);        
+    //     Node *children[N + 1];
+    //     Node *parent = nullptr;
+    //     Node *next = nullptr;
+    //     Node *prev = nullptr;
+    //     int active_keys = 0;
+    //     bool is_leaf = false;
+    // }
     //copy ctor
     B_Plus_tree(const B_Plus_tree<T, N> &copy)
     {
         __degree = copy.__degree;
         root = new Node;
-        std::memcpy(root, copy.root, sizeof(Node *));
+        // std::memcpy(root, copy.root, sizeof(Node));
         nums = copy.nums;
-        // recursive_copy(copy.root);
+        recursive_copy(copy.root,&root);
+        print_tree(root);
+        cout<<"copy ctor\n";
+        // leaf_start = new Node;
+        // leaf_start = root;
+        // leaf_start.key[0]
+        // Node *temp = root;
+        // int i;
+        // while (temp)
+        // {
+        //     if(temp->children[0]==nullptr)
+        //     {
+        //         leaf_start=temp;
+        //     }
+        //     temp = temp->children[0];
+        // }
+        // temp = root;
+        // while (temp)
+        // {
+        //     if(temp->children[temp->active_keys-1]==nullptr)
+        //     {
+        //         leaf_end = temp;
+        //     }
+        //     temp = temp->children[temp->active_keys-1];
+        // }
+        // std::memcpy(leaf_start, copy.leaf_start, sizeof(Node));
+        // leaf_end = new Node;
+        // std::memcpy(leaf_end, copy.leaf_end, sizeof(Node));
+        // cout<<root<<copy.root<<"\n";
     }
 
+    void recursive_copy(Node* src,Node** dst)
+    {
+        if(src)
+        {
+            int i = 0;
+            std::memcpy(*dst, src, sizeof(Node));
+            if(src->is_leaf==true && src->prev==nullptr)
+            {
+                leaf_start = *dst;
+            }
+            if(src->is_leaf==true && src->next==nullptr)
+            {
+                leaf_end = *dst;
+            }
+            // copy(src->key,src->key+N,(*dst)->key);  
+            while(src->children[i]!=nullptr)
+            {
+                (*dst)->children[i] =  new Node;
+                // std::memcpy((*dst)->children[i],src->children[i],  sizeof(Node));
+                recursive_copy(src->children[i],&(*dst)->children[i]);
+                ++i;
+            }
+        }
+        else
+        {
+            *dst =  nullptr;
+        }
+    }
     //stl copy-like ctor
     template <typename it>
     B_Plus_tree(it begin, it end)
@@ -625,7 +694,14 @@ public:
     }
 
     //ass ctor
-    B_Plus_tree<T, N, Compare, Alloc> &operator=(const B_Plus_tree<T, N, Compare, Alloc> &rhs) {}
+    B_Plus_tree<T, N, Compare, Alloc> &operator=(const B_Plus_tree<T, N, Compare, Alloc> &rhs) {
+        if(this!=rhs)
+        {
+            delete_tree(root);
+
+        }
+        return this;
+    }
 
     //move ctor
     B_Plus_tree(B_Plus_tree<T, N, Compare, Alloc> &&copy) {}
