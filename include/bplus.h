@@ -7,35 +7,20 @@
 #include <functional>
 #include <memory>
 #include <algorithm>
-// #include <concepts>
+#include <concepts>
 #include <iterator>
 #include <vector>
 #include <array>
 #include <iostream>
-#include <cassert>
-#include <cstring>
+#include "concepts.h"
 using namespace std;
-template <int N>
-struct X
-{
-    constexpr static bool value = N > 2;
-};
-template <typename T>
-struct Y
-{
-    constexpr static int value = 4;
-};
-template <>
-struct Y<int>
-{
-    constexpr static int value = 8;
-};
-// template <int N>
-// concept BPLUSMIN = X<N>::value;
 
-template <typename T, int N = Y<T>::value, typename Compare = less<T>, class Alloc = allocator<T>>
-// requires BPLUSMIN<N> //&& default_constructible && etcall types of stuff wrt T
-class B_Plus_tree
+template <int N>
+concept BPLUSMIN = BPLUSREQ<N>::value;
+
+template <typename T, int N = BPLUSVAL<T>::value, typename Compare = less<T>, class Alloc = allocator<T>>
+requires BPLUSMIN<N>
+    class B_Plus_tree
 {
 public:
     class iterator;
@@ -89,7 +74,7 @@ private:
     Node *leaf_end = nullptr;
     size_t nums = 0;
 
-    Node* myMerge(Node *left, Node *right, int leftNodePos)
+    Node *myMerge(Node *left, Node *right, int leftNodePos)
     {
         if (!left->is_leaf)
         {
@@ -145,7 +130,7 @@ private:
             left->active_keys++;
 
             left->children[left->active_keys] = right->children[0];
-            if(left->children[left->active_keys])
+            if (left->children[left->active_keys])
                 left->children[left->active_keys]->parent = left;
 
             if (left->is_leaf)
@@ -187,7 +172,7 @@ private:
             right->active_keys++;
 
             right->children[0] = left->children[left->active_keys];
-            if(right->children[0])
+            if (right->children[0])
                 right->children[0]->parent = right;
             left->children[left->active_keys] = nullptr;
 
@@ -278,7 +263,7 @@ private:
                 i1 = nodePos - 1;
                 i2 = 1;
             }
-            
+
             if ((node->is_leaf && nb->active_keys <= (N / 2 + 1)) ||
                 (!node->is_leaf && nb->active_keys <= N / 2))
             {
@@ -319,6 +304,7 @@ private:
         p->active_keys++;
         return i;
     }
+
     void split_push_up(Node *target, T median)
     {
         Node *nsibling = new Node;
@@ -373,6 +359,7 @@ private:
         if (target->parent->active_keys == N)
             split_push_up(target->parent, target->parent->key[N / 2]);
     }
+
     pair<iterator, bool> insert_key(T key)
     {
         if (!root)
@@ -415,6 +402,7 @@ private:
         }
         //return iterator; iterator has p and i
     }
+
     void print_tree(Node *root)
     {
         if (root)
@@ -431,6 +419,7 @@ private:
             cout << "\n\n\n";
         }
     }
+
     void delete_tree(Node *root)
     {
         if (root)
@@ -438,6 +427,36 @@ private:
             for (auto p : root->children)
                 delete_tree(p);
             delete root;
+        }
+    }
+
+    void recursive_copy(Node *src, Node **dst)
+    {
+        if (src)
+        {
+            int i = 0;
+            (*dst)->active_keys = src->active_keys;
+            (*dst)->is_leaf = src->is_leaf;
+            copy(std::begin(src->key), std::begin(src->key) + N, (*dst)->key);
+            if (src->is_leaf == true && src->prev == nullptr)
+            {
+                leaf_start = *dst;
+            }
+            if (src->is_leaf == true && src->next == nullptr)
+            {
+                leaf_end = *dst;
+            }
+            while (src->children[i] != nullptr)
+            {
+                (*dst)->children[i] = new Node;
+                recursive_copy(src->children[i], &(*dst)->children[i]);
+                (*dst)->children[i]->parent = *dst;
+                ++i;
+            }
+        }
+        else
+        {
+            *dst = nullptr;
         }
     }
 
@@ -581,24 +600,21 @@ public:
             return *base;
         }
     };
-    // traits
-    // ctors
-    // more traits to be added
+
     using value_type = T;
     using size_type = size_t;
     using difference_type = std::ptrdiff_t;
     using value_compare = Compare;
-    using reference =  value_type&;
-    using const_reference = const value_type&;
+    using reference = value_type &;
+    using const_reference = const value_type &;
     using pointer = std::allocator_traits<Alloc>::pointer;
     using iterator = iterator;
     using reverse_iterator = reverse_iterator;
     using const_iterator = const iterator;
     using const_reverse_iterator = const reverse_iterator;
 
-    B_Plus_tree() {
-        root = nullptr;
-        __degree = N;
+    B_Plus_tree()
+    {
     }
 
     explicit B_Plus_tree(std::initializer_list<T> l)
@@ -608,6 +624,7 @@ public:
             insert_key(i);
         }
     }
+
     B_Plus_tree(const B_Plus_tree<T, N> &copy)
     {
         if (copy.root)
@@ -627,7 +644,7 @@ public:
             }
             leaf_end->next = nullptr;
             Node *p = leaf_start->next;
-            if(p)
+            if (p)
                 p->prev = leaf_start;
             while (p)
             {
@@ -638,35 +655,6 @@ public:
         }
     }
 
-    void recursive_copy(Node *src, Node **dst)
-    {
-        if (src)
-        {
-            int i = 0;
-            (*dst)->active_keys = src->active_keys;
-            (*dst)->is_leaf = src->is_leaf;
-            copy(std::begin(src->key), std::begin(src->key) + N, (*dst)->key);
-            if (src->is_leaf == true && src->prev == nullptr)
-            {
-                leaf_start = *dst;
-            }
-            if (src->is_leaf == true && src->next == nullptr)
-            {
-                leaf_end = *dst;
-            }
-            while (src->children[i] != nullptr)
-            {
-                (*dst)->children[i] = new Node;
-                recursive_copy(src->children[i], &(*dst)->children[i]);
-                (*dst)->children[i]->parent = *dst;
-                ++i;
-            }
-        }
-        else
-        {
-            *dst = nullptr;
-        }
-    }
     //stl copy-like ctor
     template <typename it>
     B_Plus_tree(it begin, it end)
@@ -679,7 +667,6 @@ public:
         }
     }
 
-    //ass ctor
     B_Plus_tree<T, N, Compare, Alloc> &operator=(const B_Plus_tree<T, N, Compare, Alloc> &rhs)
     {
         if (this != &rhs)
@@ -687,7 +674,7 @@ public:
             delete_tree(root);
             __degree = rhs.__degree;
             nums = rhs.nums;
-            if(rhs.root)
+            if (rhs.root)
             {
                 root = new Node;
                 recursive_copy(rhs.root, &root);
@@ -702,7 +689,7 @@ public:
                 }
                 leaf_end->next = nullptr;
                 Node *p = leaf_start->next;
-                if(p)
+                if (p)
                     p->prev = leaf_start;
                 while (p)
                 {
@@ -716,7 +703,8 @@ public:
     }
 
     //move ctor
-    B_Plus_tree(B_Plus_tree<T, N, Compare, Alloc> &&copy) {
+    B_Plus_tree(B_Plus_tree<T, N, Compare, Alloc> &&copy)
+    {
 
         root = copy.root;
         copy.root = nullptr;
@@ -729,14 +717,15 @@ public:
     }
 
     //move ass
-    B_Plus_tree<T, N, Compare, Alloc> &operator=(B_Plus_tree<T, N, Compare, Alloc> &&rhs) {
+    B_Plus_tree<T, N, Compare, Alloc> &operator=(B_Plus_tree<T, N, Compare, Alloc> &&rhs)
+    {
 
-        if(this!=&rhs)
+        if (this != &rhs)
         {
             delete_tree(root);
             root = rhs.root;
             rhs.root = nullptr;
-            
+
             __degree = rhs.__degree;
             nums = rhs.nums;
 
@@ -744,7 +733,6 @@ public:
             leaf_end = rhs.leaf_end;
             rhs.leaf_start = nullptr;
             rhs.leaf_end = nullptr;
-
         }
         return *this;
     }
@@ -758,7 +746,8 @@ public:
     pair<iterator, bool> insert(T key)
     {
         return insert_key(key);
-    } // inserts elements
+    }
+
     void insert(std::initializer_list<T> l)
     {
         for (T i : l)
@@ -766,6 +755,7 @@ public:
             insert_key(i);
         }
     }
+
     template <typename it>
     void insert(it begin, it end)
     {
@@ -780,13 +770,12 @@ public:
     void delete_key_temp(T key)
     {
         delete_rec(root, key, 0);
-#if DEBUG
-        print_tree(root);
-#endif
     }
 
     iterator delete_key(T key) {}
+
     iterator delete_key(iterator it) {}
+
     void delete_key(iterator begin, iterator end) {}
 
     void clear()
@@ -802,7 +791,7 @@ public:
         while (temp)
         {
             i = 0;
-            while (i < temp->active_keys && !Compare()(key,temp->key[i])) //predicates
+            while (i < temp->active_keys && !Compare()(key, temp->key[i])) //predicates
             {
                 if (temp->is_leaf && !Compare()(temp->key[i], key) && !Compare()(key, temp->key[i]))
                 {
@@ -819,34 +808,42 @@ public:
     {
         return iterator(leaf_start, leaf_end, 0);
     }
+
     iterator end() const
     {
         return iterator(nullptr, leaf_end, 0);
     }
-    const iterator cbegin() const
+
+    const_iterator cbegin() const
     {
         return iterator(leaf_start, leaf_end, 0);
     }
-    const iterator cend() const
+
+    const_iterator cend() const
     {
         return iterator(nullptr, leaf_end, 0);
     }
+
     reverse_iterator rbegin() const
     {
         return reverse_iterator(leaf_end, leaf_start, leaf_end->active_keys - 1);
     }
+
     reverse_iterator rend() const
     {
         return reverse_iterator(nullptr, leaf_start, 0);
     }
-    const reverse_iterator crbegin() const
+
+    const_reverse_iterator crbegin() const
     {
         return reverse_iterator(leaf_end, leaf_start, leaf_end->active_keys - 1);
     }
-    const reverse_iterator crend() const
+
+    const_reverse_iterator crend() const
     {
         return reverse_iterator(nullptr, leaf_start, 0);
     }
+
     // std::reverse_iterator<iterator> rbegin()
     // {
     //     return std::reverse_iterator<iterator>(iterator(leaf_end, leaf_start, leaf_end->active_keys));
@@ -855,34 +852,32 @@ public:
     // {
     //     return std::reverse_iterator<iterator>(iterator(leaf_start, leaf_start, 0));
     // }
-    // // ...
-    // // begin,end => in_begin,in_end
-    // // rbegin, rend
 
-    // // Performing a range query with k elements
-    // // find_if
-    size_t size() const
+    size_type size() const
     {
         return nums;
     }
+
     bool empty() const
     {
-        return root==nullptr;
+        return root == nullptr;
     }
-    friend bool operator==(const B_Plus_tree<T, N, Compare, Alloc> &lhs,const B_Plus_tree<T, N, Compare, Alloc> &rhs)
+
+    friend bool operator==(const B_Plus_tree<T, N, Compare, Alloc> &lhs, const B_Plus_tree<T, N, Compare, Alloc> &rhs)
     {
         auto lhs_it = lhs.begin();
         auto rhs_it = rhs.begin();
-        while(lhs_it!=lhs.end() && rhs_it!=rhs.end() && *lhs_it==*rhs_it)
+        while (lhs_it != lhs.end() && rhs_it != rhs.end() && *lhs_it == *rhs_it)
         {
             ++lhs_it;
             ++rhs_it;
         }
-        return lhs_it==lhs.end() and rhs_it==rhs.end();
+        return lhs_it == lhs.end() && rhs_it == rhs.end();
     }
-    friend bool operator!=(const B_Plus_tree<T, N, Compare, Alloc> &lhs,const B_Plus_tree<T, N, Compare, Alloc> &rhs)
+
+    friend bool operator!=(const B_Plus_tree<T, N, Compare, Alloc> &lhs, const B_Plus_tree<T, N, Compare, Alloc> &rhs)
     {
-        return !(lhs==rhs);
+        return !(lhs == rhs);
     }
 };
 

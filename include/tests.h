@@ -8,19 +8,8 @@
 #include <chrono>
 using namespace std;
 using namespace std::chrono;
-template <class T>
-struct TypeIsInt
-{
-    static const bool value = false;
-};
 
-template <>
-struct TypeIsInt<int>
-{
-    static const bool value = true;
-};
-
-template <typename Type, typename pp, int d = Y<Type>::value>
+template <typename Type, typename pp, int d = BPLUSVAL<Type>::value>
 class test
 {
     const int N = 100000;
@@ -237,6 +226,87 @@ public:
             s.clear();
             dd.clear();
             ++T;
+        }
+        return 1;
+    }
+    bool insertdelete()
+    {
+        set<Type, pp> s;
+        B_Plus_tree<Type, d, pp> b;
+        long i(1);
+        mt19937 generator(chrono::system_clock::now().time_since_epoch().count());
+        uniform_int_distribution<Type> distribution(-N, N);
+        int T(Tmin);
+        while (T < Tmax)
+        {
+            vector<Type> v;
+            for (int j = 0; j < T; ++j)
+                v.push_back(distribution(generator));
+            for (auto i : v)
+            {
+                b.insert(i);
+                s.insert(i);
+            }
+            shuffle(begin(v), end(v), generator);
+            vector<Type> temp(begin(s), end(s));
+            for (auto i = begin(v); i != begin(v) + v.size() / 2; ++i)
+            {
+                b.delete_key_temp(*i);
+                s.erase(*i);
+            }
+            if (!equal(begin(b), end(b), begin(s), end(s)))
+            {
+                cout << "Insert&Del " << T << " Failed\n";
+                return 0;
+            }
+            for (int j = 0; j < T / 2; ++j)
+                v[j] = distribution(generator);
+            for (auto i = begin(v); i != begin(v) + v.size() / 2; ++i)
+            {
+                b.insert(*i);
+                s.insert(*i);
+            }
+            if (!equal(begin(b), end(b), begin(s), end(s)))
+            {
+                cout << "Insert&Del " << T << " Failed\n";
+                return 0;
+            }
+            if (!is_sorted(begin(b), end(b), pp()))
+            {
+                vector<Type> t1(begin(s), end(s));
+                vector<Type> t2(begin(b), end(b));
+                sort(begin(t1), end(t1));
+                sort(begin(t2), end(t2));
+                if (t1 != t2)
+                {
+                    cout << "Insert(Rand) :" << i << "/" << trials << ",N:" << T << " Failed\n";
+                    cout << "I:";
+                    for (auto i : v)
+                        cout << i << "\t";
+                    cout << "\n";
+                    cout << "E:";
+                    sort(begin(v), end(v), pp());
+                    for (auto i : v)
+                        cout << i << "\t";
+                    cout << "\nS:";
+                    for (auto i : s)
+                        cout << i << "\t";
+                    cout << "\nB:";
+                    for (auto i : b)
+                        cout << i << "\t";
+                    cout << "\n";
+                    return 0;
+                }
+            }
+            i = (i + 1) % trials;
+            if (!(i % trials))
+            {
+                cout << "Insert&Del(Rand): " << T << " Passed \n";
+                ++T;
+            }
+            v.clear();
+            b.clear();
+            s.clear();
         }
         return 1;
     }
