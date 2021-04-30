@@ -19,8 +19,7 @@ template <int N>
 concept BPLUSMIN = BPLUSREQ<N>::value;
 
 template <typename T, int N = BPLUSVAL<T>::value, typename Compare = less<T>, class Alloc = allocator<T>>
-requires BPLUSMIN<N>
-    class B_Plus_tree
+requires BPLUSMIN<N> class B_Plus_tree
 {
 public:
     class iterator;
@@ -29,7 +28,7 @@ public:
 private:
     struct Node
     {
-        T key[N]; // 78896 could be a vector. could keep ptrs to keys to allow non default ctorable, more mem usage
+        T *key; // 78896 could be a vector. could keep ptrs to keys to allow non default ctorable, more mem usage
         // vector<T> key; //80384 allows non default constructable
         // array<T, N> key; //78896
         Node *children[N + 1];
@@ -38,20 +37,19 @@ private:
         Node *prev = nullptr;
         int active_keys = 0;
         bool is_leaf = false;
+        static Alloc a;
         Node()
         {
             // key.reserve(N);
+            key = a.allocate(N);
             fill(children, children + N + 1, nullptr);
         }
-        Node &operator=(const Node &rhs)
+        ~Node()
         {
-            cout << "operator= called\n";
-            if (this != rhs)
-            {
-                ;
-            }
-            return *this;
+            a.deallocate(key, N);
         }
+        Node(const Node &n) = delete;
+        Node &operator=(const Node &rhs) = delete;
         void *operator new(size_t size)
         {
             return ::operator new(size); //call allocator or something here
@@ -62,7 +60,8 @@ private:
                 o << "(nullptr)";
             else
             {
-                copy(std::begin(n->key), std::begin(n->key) + n->active_keys, ostream_iterator<T>(o, "\t"));
+                copy(n->key, n->key + n->active_keys, ostream_iterator<T>(o, "\t"));
+                // copy(std::begin(n->key), std::begin(n->key) + n->active_keys, ostream_iterator<T>(o, "\t"));
                 o << "(" << n->active_keys << "," << n->is_leaf << ")\t";
             }
             return o;
@@ -299,7 +298,8 @@ private:
         int i(loc);
         while (i < p->active_keys && Compare()(p->key[i], key))
             ++i;
-        rotate(std::begin(p->key) + i, std::begin(p->key) + N - 1, std::begin(p->key) + N);
+        rotate(p->key + i, p->key + N - 1, p->key + N);
+        // rotate(std::begin(p->key) + i, std::begin(p->key) + N - 1, std::begin(p->key) + N);
         p->key[i] = key;
         p->active_keys++;
         return i;
@@ -332,7 +332,8 @@ private:
         {
             // should median placement depend on predicate?
             // if yes change here and target->active_keys
-            copy(std::begin(target->key) + N / 2, std::begin(target->key) + N, std::begin(nsibling->key));
+            copy((target->key) + N / 2, (target->key) + N, (nsibling->key));
+            // copy(std::begin(target->key) + N / 2, std::begin(target->key) + N, std::begin(nsibling->key));
             if (target->next)
                 target->next->prev = nsibling;
             target->next = nsibling;
@@ -348,7 +349,8 @@ private:
             }
             else
             {
-                copy(std::begin(target->key) + N / 2 + 1, std::begin(target->key) + N, std::begin(nsibling->key));
+                copy((target->key) + N / 2 + 1, (target->key) + N, (nsibling->key));
+                // copy(std::begin(target->key) + N / 2 + 1, std::begin(target->key) + N, std::begin(nsibling->key));
                 --nsibling->active_keys;
             }
             copy(target->children + N / 2 + 1, target->children + N + 1, std::begin(nsibling->children) + static_cast<int>(N == 2));
