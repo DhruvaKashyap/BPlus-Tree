@@ -160,7 +160,10 @@ public:
             for (Type i : dd)
             {
                 if (find(begin(v), end(v), i) == v.end())
+                {
                     b.delete_key(i);
+                    v.erase(i);
+                }
                 else
                     ++k;
                 if (!equal(begin(v), end(v), begin(b), end(b)))

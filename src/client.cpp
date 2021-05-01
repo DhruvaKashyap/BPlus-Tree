@@ -26,7 +26,6 @@ int main()
 #if DEBUG
     cout << "DEBUGGING TURNED ON\n";
 #endif
-
     B_Plus_tree<int, 3> b({8, 2, 6, 1, 4, 7, 5});
     for (auto i : b)
     {
@@ -120,7 +119,7 @@ int main()
     for (auto i : b)
         cout << i << "\t";
     cout << "\n";
-    B_Plus_tree<int, 3> e({4, 5});
+    B_Plus_tree<int, 3> e({4});
     B_Plus_tree<int, 3> f(e);
     cout << "f\n";
     for (auto i : f)
@@ -131,6 +130,7 @@ int main()
     for (auto i : f)
         cout << i << "\t";
     cout << "\n";
+    e.insert(5);
     cout << "e after 4 is deleted in f\n";
     for (auto i : e)
         cout << i << "\t";
@@ -210,10 +210,12 @@ int main()
     cout << "test\n";
     cout << *bt.delete_key(3) << "\n";
     cout << *bt.delete_key(5) << "\n";
+    cout << "bt.size(): " << bt.size() << "\n";
     cout << (bt.delete_key(6) == bt.end()) << "\n";
     cout << (bt.delete_key(7) == bt.end()) << "\n";
     cout << (bt.delete_key(4) == bt.end()) << "\n";
     cout << *bt.delete_key(1) << "\n";
+    cout << "bt.size(): " << bt.size() << "\n";
 
     bt.clear();
     cout << (bt.delete_key(2) == bt.end()) << "\n";

@@ -15,7 +15,7 @@ struct BPLUSVAL
 template <>
 struct BPLUSVAL<int>
 {
-    constexpr static int value = 8;
+    constexpr static int value = 16;
 };
 
 template <>
@@ -24,10 +24,8 @@ struct BPLUSVAL<double>
     constexpr static int value = 8;
 };
 
-template <>
-struct BPLUSVAL<bool>
-{
-    constexpr static int value = 16;
-};
+template <int N>
+concept BPLUSMIN = BPLUSREQ<N>::value;
+
 
 #endif

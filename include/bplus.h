@@ -15,9 +15,6 @@
 #include "concepts.h"
 using namespace std;
 
-template <int N>
-concept BPLUSMIN = BPLUSREQ<N>::value;
-
 template <typename T, int N = BPLUSVAL<T>::value, typename Compare = less<T>, class Alloc = allocator<T>>
 requires BPLUSMIN<N> class B_Plus_tree
 {
@@ -28,14 +25,14 @@ public:
     using size_type = size_t;
     using difference_type = std::ptrdiff_t;
     using value_compare = Compare;
-    using reference = value_type &;
+    using reference = const value_type &;
     using const_reference = const value_type &;
     using pointer = std::allocator_traits<Alloc>::pointer;
     using iterator = bpiterator;
     using reverse_iterator = bpriterator;
     using const_iterator = const iterator;
     using const_reverse_iterator = const reverse_iterator;
-/*
+    /*
     B_Plus_tree();
     explicit B_Plus_tree(std::initializer_list<T> l);
     B_Plus_tree(const B_Plus_tree<T, N> &copy);
@@ -73,7 +70,7 @@ private:
     Node *leaf_end = nullptr;
     size_t nums = 0;
     Alloc alloc = Alloc();
-/*
+    /*
     Node *myMerge(Node *left, Node *right, int leftNodePos);
     void reDistribute(Node *left, Node *right, int leftNodePos, int curr);
     bpiterator delete_rec(Node *node, T key, int nodePos);
@@ -113,7 +110,7 @@ private:
         {
             return ::operator new(size); //call allocator or something here
         }
-        friend ostream &operator<<(ostream &o, Node *n)
+        friend ostream &operator<<(ostream &o, const Node *n)
         {
             if (!n)
                 o << "(nullptr)";
@@ -282,7 +279,7 @@ private:
                         node->key[j] = node->key[j + 1];
                     }
                     node->active_keys--;
-
+                    --nums;
                     if (i < node->active_keys)
                     {
                         res = node->key[i];
@@ -400,7 +397,6 @@ private:
             np->key[0] = median;
             np->active_keys = 1;
             root = target->parent = np;
-            ++nums;
             target->parent->children[0] = target;
         }
         else
@@ -565,8 +561,10 @@ public:
         using value_type = T;
         using iterator_category = bidirectional_iterator_tag;
         using difference_type = ptrdiff_t;
-        using pointer = T *;
+        using pointer = const T *;
+        using const_pointer = const T *;
         using reference = const T &;
+        using const_reference = const T &;
         friend bool operator==(const bpiterator &lhs, const bpiterator &rhs)
         {
             return lhs.ptr == rhs.ptr && lhs.index == rhs.index;
@@ -642,8 +640,6 @@ public:
     class bpriterator
     {
         bpiterator base;
-
-    protected:
         bpriterator(Node *n, Node *e, int j) : base{n, e, j}
         {
         }
@@ -653,8 +649,10 @@ public:
         using value_type = T;
         using iterator_category = bidirectional_iterator_tag;
         using difference_type = ptrdiff_t;
-        using pointer = T *;
+        using pointer = const T *;
+        using const_pointer = const T *;
         using reference = const T &;
+        using const_reference = const T &;
         friend bool operator==(const bpriterator &lhs, const bpriterator &rhs)
         {
             return lhs.base == rhs.base;
@@ -749,11 +747,11 @@ public:
     {
 
         root = copy.root;
-        copy.root = nullptr;
         __degree = copy.__degree;
         nums = copy.nums;
         leaf_start = copy.leaf_start;
         leaf_end = copy.leaf_end;
+        copy.root = nullptr;
         copy.leaf_end = nullptr;
         copy.leaf_start = nullptr;
     }
@@ -766,13 +764,11 @@ public:
         {
             delete_tree(root);
             root = rhs.root;
-            rhs.root = nullptr;
-
             __degree = rhs.__degree;
             nums = rhs.nums;
-
             leaf_start = rhs.leaf_start;
             leaf_end = rhs.leaf_end;
+            rhs.root = nullptr;
             rhs.leaf_start = nullptr;
             rhs.leaf_end = nullptr;
         }
