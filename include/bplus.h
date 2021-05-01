@@ -811,16 +811,18 @@ public:
         return delete_rec(root, key, 0);
     }
 
-    iterator delete_key(iterator it)
+    template <typename it>
+    iterator delete_key(it i)
     {
-        return delete_rec(root, *it, 0);
+        return delete_rec(root, *i, 0);
     }
 
-    void delete_key(iterator begin, iterator end)
+    template <typename it>
+    void delete_key(it begin, it end)
     {
-        for (iterator it = begin; it != end; ++it)
+        for (auto i = begin; i != end; ++i)
         {
-            delete_rec(root, *it, 0);
+            delete_rec(root, *i, 0);
         }
     }
 
