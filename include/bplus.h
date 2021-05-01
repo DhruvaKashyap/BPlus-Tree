@@ -140,7 +140,7 @@ private:
         if (!left->is_leaf)
         {
             left->key[left->active_keys] = left->parent->key[leftNodePos];
-            left->active_keys++;
+            ++left->active_keys;
         }
 
         for (int j = 0; j < right->active_keys; ++j)
@@ -157,7 +157,7 @@ private:
             left->parent->children[j + 1] = left->parent->children[j + 2];
         }
         left->parent->children[left->parent->active_keys] = nullptr;
-        left->parent->active_keys--;
+        --left->parent->active_keys;
 
         for (int i = 0; i <= left->active_keys && left->children[i]; ++i)
         {
@@ -188,7 +188,7 @@ private:
             {
                 left->key[left->active_keys] = left->parent->key[leftNodePos];
             }
-            left->active_keys++;
+            ++left->active_keys;
 
             left->children[left->active_keys] = right->children[0];
             if (left->children[left->active_keys])
@@ -211,7 +211,7 @@ private:
             right->children[right->active_keys - 1] = right->children[right->active_keys];
             right->children[right->active_keys] = nullptr;
 
-            right->active_keys--;
+            --right->active_keys;
         }
         else
         {
@@ -230,7 +230,7 @@ private:
             {
                 right->key[0] = left->parent->key[leftNodePos];
             }
-            right->active_keys++;
+            ++right->active_keys;
 
             right->children[0] = left->children[left->active_keys];
             if (right->children[0])
@@ -238,7 +238,7 @@ private:
             left->children[left->active_keys] = nullptr;
 
             left->parent->key[leftNodePos] = left->key[left->active_keys - 1];
-            left->active_keys--;
+            --left->active_keys;
         }
     }
 
@@ -278,8 +278,9 @@ private:
                     {
                         node->key[j] = node->key[j + 1];
                     }
-                    node->active_keys--;
+                    --node->active_keys;
                     --nums;
+
                     if (i < node->active_keys)
                     {
                         res = node->key[i];
