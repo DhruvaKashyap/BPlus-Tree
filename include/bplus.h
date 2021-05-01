@@ -22,8 +22,8 @@ template <typename T, int N = BPLUSVAL<T>::value, typename Compare = less<T>, cl
 requires BPLUSMIN<N> class B_Plus_tree
 {
 public:
-    class iterator;
-    class reverse_iterator;
+    class bpiterator;
+    class bpriterator;
 
 private:
     struct Node
@@ -37,8 +37,8 @@ private:
         Node *prev = nullptr;
         int active_keys = 0;
         bool is_leaf = false;
-        static Alloc a;
-        Node()
+        Alloc &a;
+        Node(Alloc x) : a(x)
         {
             // key.reserve(N);
             key = a.allocate(N);
@@ -72,6 +72,7 @@ private:
     Node *leaf_start = nullptr;
     Node *leaf_end = nullptr;
     size_t nums = 0;
+    Alloc alloc = Alloc();
 
     Node *myMerge(Node *left, Node *right, int leftNodePos)
     {
@@ -180,13 +181,13 @@ private:
         }
     }
 
-    iterator delete_rec(Node *node, T key, int nodePos)
+    bpiterator delete_rec(Node *node, T key, int nodePos)
     {
         int flag = 0;
         int res;
         int resExists = 0;
-        iterator it(nullptr, leaf_end, 0);
-        if(!node)
+        bpiterator it(nullptr, leaf_end, 0);
+        if (!node)
             return it;
         int firstKey = node->key[0];
 
@@ -218,20 +219,20 @@ private:
                     }
                     node->active_keys--;
 
-                    if(i < node->active_keys)
+                    if (i < node->active_keys)
                     {
                         res = node->key[i];
                         resExists = 1;
                     }
                     else
                     {
-                        if(node->next)
+                        if (node->next)
                         {
                             res = node->next->key[0];
                             resExists = 1;
                         }
                     }
-                    
+
                     break;
                 }
             }
@@ -246,7 +247,7 @@ private:
                     delete node;
                     leaf_start = leaf_end = root = nullptr;
                 }
-                if(resExists)
+                if (resExists)
                 {
                     it = find(res);
                 }
@@ -315,7 +316,7 @@ private:
             }
         }
 
-        if(resExists)
+        if (resExists)
         {
             it = find(res);
         }
@@ -336,14 +337,14 @@ private:
 
     void split_push_up(Node *target, T median)
     {
-        Node *nsibling = new Node;
+        Node *nsibling = new Node(alloc);
         nsibling->is_leaf = target->is_leaf;
         nsibling->next = target->next;
         nsibling->active_keys = N / 2 + N % 2;
         int pos(0);
         if (target->parent == nullptr)
         {
-            Node *np = new Node;
+            Node *np = new Node(alloc);
             np->key[0] = median;
             np->active_keys = 1;
             root = target->parent = np;
@@ -391,18 +392,18 @@ private:
             split_push_up(target->parent, target->parent->key[N / 2]);
     }
 
-    pair<iterator, bool> insert_key(T key)
+    pair<bpiterator, bool> insert_key(T key)
     {
         if (!root)
         {
-            root = new Node;
+            root = new Node(alloc);
             root->key[0] = key;
             leaf_start = root;
             leaf_end = root;
             root->active_keys = 1;
             root->is_leaf = true;
             ++nums;
-            return make_pair(iterator(root, leaf_end, 0), true);
+            return make_pair(bpiterator(root, leaf_end, 0), true);
         }
         else
         {
@@ -418,7 +419,7 @@ private:
                 }
                 if (i < p->active_keys && !Compare()(p->key[i], key) && !Compare()(key, p->key[i]))
                 {
-                    return make_pair(iterator(p, leaf_end, i), false); //return iterator(p,leaf_end,i),false
+                    return make_pair(bpiterator(p, leaf_end, i), false); //return bpiterator(p,leaf_end,i),false
                 }
                 target = p;
                 p = p->children[i];
@@ -429,7 +430,7 @@ private:
                 split_push_up(target, target->key[N / 2]);
             }
             ++nums;
-            return make_pair(iterator(p, leaf_end, i), true);
+            return make_pair(bpiterator(p, leaf_end, i), true);
         }
         //return iterator; iterator has p and i
     }
@@ -461,43 +462,49 @@ private:
         }
     }
 
-    void recursive_copy(Node *src, Node **dst)
+    void recursive_copy(Node *src, Node *dst, Node **nr)
     {
         if (src)
         {
+            dst->active_keys = src->active_keys;
+            dst->is_leaf = src->is_leaf;
+            copy(src->key, src->key + N, dst->key);
+            // copy(std::begin(src->key), std::begin(src->key) + N, dst->key);
+            if (src->is_leaf)
+            {
+                if (src->prev == nullptr)
+                {
+                    leaf_start = dst;
+                }
+                else
+                {
+                    dst->prev = *nr;
+                    (*nr)->next = dst;
+                }
+                if (src->next == nullptr)
+                {
+                    leaf_end = dst;
+                }
+                *nr = dst;
+            }
             int i = 0;
-            (*dst)->active_keys = src->active_keys;
-            (*dst)->is_leaf = src->is_leaf;
-            copy(std::begin(src->key), std::begin(src->key) + N, (*dst)->key);
-            if (src->is_leaf == true && src->prev == nullptr)
-            {
-                leaf_start = *dst;
-            }
-            if (src->is_leaf == true && src->next == nullptr)
-            {
-                leaf_end = *dst;
-            }
             while (src->children[i] != nullptr)
             {
-                (*dst)->children[i] = new Node;
-                recursive_copy(src->children[i], &(*dst)->children[i]);
-                (*dst)->children[i]->parent = *dst;
+                dst->children[i] = new Node(alloc);
+                recursive_copy(src->children[i], dst->children[i], nr);
+                dst->children[i]->parent = dst;
                 ++i;
             }
-        }
-        else
-        {
-            *dst = nullptr;
         }
     }
 
 public:
-    class iterator
+    class bpiterator
     {
         Node *ptr;
         Node *end;
         int index;
-        iterator(Node *n, Node *e, int i) : ptr(n), end(e), index(i)
+        bpiterator(Node *n, Node *e, int i) : ptr(n), end(e), index(i)
         {
         }
         friend class B_Plus_tree<T, N, Compare, Alloc>;
@@ -508,15 +515,15 @@ public:
         using difference_type = ptrdiff_t;
         using pointer = T *;
         using reference = const T &;
-        friend bool operator==(const iterator &lhs, const iterator &rhs)
+        friend bool operator==(const bpiterator &lhs, const bpiterator &rhs)
         {
             return lhs.ptr == rhs.ptr && lhs.index == rhs.index;
         }
-        friend bool operator!=(const iterator &lhs, const iterator &rhs)
+        friend bool operator!=(const bpiterator &lhs, const bpiterator &rhs)
         {
             return !(lhs == rhs);
         }
-        iterator &operator++()
+        bpiterator &operator++()
         {
             if (ptr)
             {
@@ -536,13 +543,13 @@ public:
             }
             return *this;
         }
-        iterator operator++(int)
+        bpiterator operator++(int)
         {
-            iterator temp(*this);
+            bpiterator temp(*this);
             ++*this;
             return temp;
         }
-        iterator &operator--()
+        bpiterator &operator--()
         {
             if (ptr)
             {
@@ -568,9 +575,9 @@ public:
             }
             return *this;
         }
-        iterator operator--(int)
+        bpiterator operator--(int)
         {
-            iterator temp(*this);
+            bpiterator temp(*this);
             --*this;
             return temp;
         }
@@ -580,12 +587,12 @@ public:
         }
     };
 
-    class reverse_iterator
+    class bpriterator
     {
-        iterator base;
+        bpiterator base;
 
     protected:
-        reverse_iterator(Node *n, Node *e, int j) : base{n, e, j}
+        bpriterator(Node *n, Node *e, int j) : base{n, e, j}
         {
         }
         friend class B_Plus_tree<T, N, Compare, Alloc>;
@@ -596,33 +603,33 @@ public:
         using difference_type = ptrdiff_t;
         using pointer = T *;
         using reference = const T &;
-        friend bool operator==(const reverse_iterator &lhs, const reverse_iterator &rhs)
+        friend bool operator==(const bpriterator &lhs, const bpriterator &rhs)
         {
             return lhs.base == rhs.base;
         }
-        friend bool operator!=(const reverse_iterator &lhs, const reverse_iterator &rhs)
+        friend bool operator!=(const bpriterator &lhs, const bpriterator &rhs)
         {
             return !(lhs == rhs);
         }
-        reverse_iterator &operator++()
+        bpriterator &operator++()
         {
             --base;
             return *this;
         }
-        reverse_iterator operator++(int)
+        bpriterator operator++(int)
         {
-            reverse_iterator temp(*this);
+            bpriterator temp(*this);
             --base;
             return temp;
         }
-        reverse_iterator &operator--()
+        bpriterator &operator--()
         {
             ++base;
             return *this;
         }
-        reverse_iterator operator--(int)
+        bpriterator operator--(int)
         {
-            reverse_iterator temp(*this);
+            bpriterator temp(*this);
             ++base;
             return temp;
         }
@@ -639,8 +646,8 @@ public:
     using reference = value_type &;
     using const_reference = const value_type &;
     using pointer = std::allocator_traits<Alloc>::pointer;
-    using iterator = iterator;
-    using reverse_iterator = reverse_iterator;
+    using iterator = bpiterator;
+    using reverse_iterator = bpriterator;
     using const_iterator = const iterator;
     using const_reverse_iterator = const reverse_iterator;
 
@@ -662,27 +669,9 @@ public:
         {
             __degree = copy.__degree;
             nums = copy.nums;
-            root = new Node;
-            recursive_copy(copy.root, &root);
-            Node *t(leaf_start);
-            leaf_start->prev = nullptr;
-            auto i = ++copy.begin();
-            while (i != copy.end())
-            {
-                t->next = this->find(*i).ptr;
-                t = t->next;
-                ++i;
-            }
-            leaf_end->next = nullptr;
-            Node *p = leaf_start->next;
-            if (p)
-                p->prev = leaf_start;
-            while (p)
-            {
-                if (p->next)
-                    p->next->prev = p;
-                p = p->next;
-            }
+            root = new Node(alloc);
+            Node *temp;
+            recursive_copy(copy.root, root, &temp);
         }
     }
 
@@ -707,27 +696,9 @@ public:
             nums = rhs.nums;
             if (rhs.root)
             {
-                root = new Node;
-                recursive_copy(rhs.root, &root);
-                Node *t(leaf_start);
-                leaf_start->prev = nullptr;
-                auto i = ++rhs.begin();
-                while (i != rhs.end())
-                {
-                    t->next = this->find(*i).ptr;
-                    t = t->next;
-                    ++i;
-                }
-                leaf_end->next = nullptr;
-                Node *p = leaf_start->next;
-                if (p)
-                    p->prev = leaf_start;
-                while (p)
-                {
-                    if (p->next)
-                        p->next->prev = p;
-                    p = p->next;
-                }
+                root = new Node(alloc);
+                Node *temp;
+                recursive_copy(rhs.root, root, &temp);
             }
         }
         return *this;
@@ -798,7 +769,7 @@ public:
         }
     }
 
-    iterator delete_key(T key) 
+    iterator delete_key(T key)
     {
         return delete_rec(root, key, 0);
     }
@@ -810,7 +781,7 @@ public:
 
     void delete_key(iterator begin, iterator end)
     {
-        for(iterator it=begin; it!=end; ++it)
+        for (iterator it = begin; it != end; ++it)
         {
             delete_rec(root, *it, 0);
         }
