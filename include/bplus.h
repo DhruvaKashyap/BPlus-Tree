@@ -24,7 +24,66 @@ requires BPLUSMIN<N> class B_Plus_tree
 public:
     class bpiterator;
     class bpriterator;
-
+    using value_type = T;
+    using size_type = size_t;
+    using difference_type = std::ptrdiff_t;
+    using value_compare = Compare;
+    using reference = value_type &;
+    using const_reference = const value_type &;
+    using pointer = std::allocator_traits<Alloc>::pointer;
+    using iterator = bpiterator;
+    using reverse_iterator = bpriterator;
+    using const_iterator = const iterator;
+    using const_reverse_iterator = const reverse_iterator;
+/*
+    B_Plus_tree();
+    explicit B_Plus_tree(std::initializer_list<T> l);
+    B_Plus_tree(const B_Plus_tree<T, N> &copy);
+    template <typename it>
+    B_Plus_tree(it begin, it end);
+    B_Plus_tree<T, N, Compare, Alloc> &operator=(const B_Plus_tree<T, N, Compare, Alloc> &rhs);
+    B_Plus_tree(B_Plus_tree<T, N, Compare, Alloc> &&copy);
+    B_Plus_tree<T, N, Compare, Alloc> &operator=(B_Plus_tree<T, N, Compare, Alloc> &&rhs);
+    ~B_Plus_tree();
+    pair<iterator, bool> insert(T key);
+    void insert(std::initializer_list<T> l);
+    iterator delete_key(T key);
+    iterator delete_key(iterator it);
+    void delete_key(iterator begin, iterator end);
+    void clear();
+    iterator find(T key) const;
+    iterator begin() const;
+    iterator end() const;
+    const_iterator cbegin() const;
+    const_iterator cend() const;
+    reverse_iterator rbegin() const;
+    reverse_iterator rend() const;
+    const_reverse_iterator crbegin() const;
+    const_reverse_iterator crend() const;
+    size_type size() const;
+    bool empty() const;
+    friend bool operator==(const B_Plus_tree<T, N, Compare, Alloc> &lhs, const B_Plus_tree<T, N, Compare, Alloc> &rhs);
+    friend bool operator!=(const B_Plus_tree<T, N, Compare, Alloc> &lhs, const B_Plus_tree<T, N, Compare, Alloc> &rhs);
+*/
+private:
+    struct Node;
+    int __degree = N;
+    Node *root = nullptr;
+    Node *leaf_start = nullptr;
+    Node *leaf_end = nullptr;
+    size_t nums = 0;
+    Alloc alloc = Alloc();
+/*
+    Node *myMerge(Node *left, Node *right, int leftNodePos);
+    void reDistribute(Node *left, Node *right, int leftNodePos, int curr);
+    bpiterator delete_rec(Node *node, T key, int nodePos);
+    bpiterator delete_rec(Node *node, T key, int nodePos);
+    void split_push_up(Node *target, T median);
+    pair<bpiterator, bool> insert_key(T key);
+    void print_tree(Node *root);
+    void delete_tree(Node *root);
+    void recursive_copy(Node *src, Node *dst, Node **nr);
+*/
 private:
     struct Node
     {
@@ -66,13 +125,18 @@ private:
             }
             return o;
         }
+        int insert_key_node_at(T key, int loc = 0)
+        {
+            int i(loc);
+            while (i < this->active_keys && Compare()(this->key[i], key))
+                ++i;
+            rotate(this->key + i, this->key + N - 1, this->key + N);
+            // rotate(std::begin(this->key) + i, std::begin(this->key) + N - 1, std::begin(this->key) + N);
+            this->key[i] = key;
+            this->active_keys++;
+            return i;
+        }
     };
-    int __degree = N;
-    Node *root = nullptr;
-    Node *leaf_start = nullptr;
-    Node *leaf_end = nullptr;
-    size_t nums = 0;
-    Alloc alloc = Alloc();
 
     Node *myMerge(Node *left, Node *right, int leftNodePos)
     {
@@ -323,18 +387,6 @@ private:
         return it;
     }
 
-    int insert_key_node_at(T key, Node *p, int loc = 0)
-    {
-        int i(loc);
-        while (i < p->active_keys && Compare()(p->key[i], key))
-            ++i;
-        rotate(p->key + i, p->key + N - 1, p->key + N);
-        // rotate(std::begin(p->key) + i, std::begin(p->key) + N - 1, std::begin(p->key) + N);
-        p->key[i] = key;
-        p->active_keys++;
-        return i;
-    }
-
     void split_push_up(Node *target, T median)
     {
         Node *nsibling = new Node(alloc);
@@ -353,7 +405,7 @@ private:
         }
         else
         {
-            pos = insert_key_node_at(median, target->parent);
+            pos = target->parent->insert_key_node_at(median);
             rotate(target->parent->children + pos + 1, target->parent->children + N, target->parent->children + N + 1); // faster than copy
         }
         nsibling->parent = target->parent;
@@ -424,7 +476,7 @@ private:
                 target = p;
                 p = p->children[i];
             }
-            insert_key_node_at(key, target, i);
+            target->insert_key_node_at(key, i);
             if (target->active_keys == N)
             {
                 split_push_up(target, target->key[N / 2]);
@@ -638,18 +690,6 @@ public:
             return *base;
         }
     };
-
-    using value_type = T;
-    using size_type = size_t;
-    using difference_type = std::ptrdiff_t;
-    using value_compare = Compare;
-    using reference = value_type &;
-    using const_reference = const value_type &;
-    using pointer = std::allocator_traits<Alloc>::pointer;
-    using iterator = bpiterator;
-    using reverse_iterator = bpriterator;
-    using const_iterator = const iterator;
-    using const_reverse_iterator = const reverse_iterator;
 
     B_Plus_tree()
     {

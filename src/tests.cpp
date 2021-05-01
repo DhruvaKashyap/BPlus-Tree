@@ -8,7 +8,7 @@ struct pp
 {
     bool operator()(const T lhs, const T rhs) const
     {
-        return lhs < rhs;
+        return lhs % 100 > rhs % 100;
     }
 };
 using type = int;

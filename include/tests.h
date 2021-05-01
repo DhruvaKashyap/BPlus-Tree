@@ -15,7 +15,7 @@ class test
     const int N = 100000;
     const int trials = 1000;
     const int Tmin = 1;
-    const int Tmax = 15;
+    const int Tmax = 100;
 
 public:
     test()
@@ -160,7 +160,7 @@ public:
             for (Type i : dd)
             {
                 if (find(begin(v), end(v), i) == v.end())
-                    b.delete_key_temp(i);
+                    b.delete_key(i);
                 else
                     ++k;
                 if (!equal(begin(v), end(v), begin(b), end(b)))
@@ -200,7 +200,7 @@ public:
             auto start = high_resolution_clock::now();
             for (Type i : dd)
             {
-                b.delete_key_temp(i);
+                b.delete_key(i);
                 s.erase(i);
                 if (!equal(begin(s), end(s), begin(b), end(b)))
                 {
@@ -251,7 +251,7 @@ public:
             vector<Type> temp(begin(s), end(s));
             for (auto i = begin(v); i != begin(v) + v.size() / 2; ++i)
             {
-                b.delete_key_temp(*i);
+                b.delete_key(*i);
                 s.erase(*i);
             }
             if (!equal(begin(b), end(b), begin(s), end(s)))
