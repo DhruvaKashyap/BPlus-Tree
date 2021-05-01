@@ -180,10 +180,15 @@ private:
         }
     }
 
-    void delete_rec(Node *node, T key, int nodePos)
+    iterator delete_rec(Node *node, T key, int nodePos)
     {
         int flag = 0;
-        int idk = node->key[0];
+        int res;
+        int resExists = 0;
+        iterator it(nullptr, leaf_end, 0);
+        if(!node)
+            return it;
+        int firstKey = node->key[0];
 
         if (!node->is_leaf)
         {
@@ -191,14 +196,14 @@ private:
             {
                 if (Compare()(key, node->key[i]))
                 {
-                    delete_rec(node->children[i], key, i);
+                    it = delete_rec(node->children[i], key, i);
                     flag = 1;
                     break;
                 }
             }
             if (!flag)
             {
-                delete_rec(node->children[node->active_keys], key, node->active_keys);
+                it = delete_rec(node->children[node->active_keys], key, node->active_keys);
             }
         }
         else
@@ -212,6 +217,21 @@ private:
                         node->key[j] = node->key[j + 1];
                     }
                     node->active_keys--;
+
+                    if(i < node->active_keys)
+                    {
+                        res = node->key[i];
+                        resExists = 1;
+                    }
+                    else
+                    {
+                        if(node->next)
+                        {
+                            res = node->next->key[0];
+                            resExists = 1;
+                        }
+                    }
+                    
                     break;
                 }
             }
@@ -226,7 +246,11 @@ private:
                     delete node;
                     leaf_start = leaf_end = root = nullptr;
                 }
-                return;
+                if(resExists)
+                {
+                    it = find(res);
+                }
+                return it;
             }
             else
             {
@@ -235,7 +259,7 @@ private:
                     root = node->children[0];
                     delete node;
                     root->parent = nullptr;
-                    return;
+                    return it;
                 }
             }
         }
@@ -273,8 +297,7 @@ private:
                 reDistribute(n1, n2, i1, i2);
             }
         }
-        // where are the deletions in internal nodes happening?
-        //TODO - test redistribute
+
         if (node->is_leaf)
         {
             Node *temp = node->parent;
@@ -282,7 +305,7 @@ private:
             {
                 for (int i = 0; i < temp->active_keys; ++i)
                 {
-                    if (!Compare()(temp->key[i], idk) && !Compare()(idk, temp->key[i]))
+                    if (!Compare()(temp->key[i], firstKey) && !Compare()(firstKey, temp->key[i]))
                     {
                         temp->key[i] = node->key[0];
                         break;
@@ -291,6 +314,12 @@ private:
                 temp = temp->parent;
             }
         }
+
+        if(resExists)
+        {
+            it = find(res);
+        }
+        return it;
     }
 
     int insert_key_node_at(T key, Node *p, int loc = 0)
@@ -769,16 +798,23 @@ public:
         }
     }
 
-    void delete_key_temp(T key)
+    iterator delete_key(T key) 
     {
-        delete_rec(root, key, 0);
+        return delete_rec(root, key, 0);
     }
 
-    iterator delete_key(T key) {}
+    iterator delete_key(iterator it)
+    {
+        return delete_rec(root, *it, 0);
+    }
 
-    iterator delete_key(iterator it) {}
-
-    void delete_key(iterator begin, iterator end) {}
+    void delete_key(iterator begin, iterator end)
+    {
+        for(iterator it=begin; it!=end; ++it)
+        {
+            delete_rec(root, *it, 0);
+        }
+    }
 
     void clear()
     {
