@@ -20,6 +20,10 @@ public:
         return x1.a < x2.a;
     }
 };
+void disp_elements(int i)
+{ // function:
+    cout << i << "\t";
+}
 
 int main()
 {
@@ -78,6 +82,7 @@ int main()
         cout << i << "\t";
     }
     cout << "\n";
+    cout << "a.size(): " << a.size() << "\n";
 
     // To show what the delete returns
     auto del_key = a.delete_key(12);
@@ -110,6 +115,7 @@ int main()
         cout << i << "\t";
     }
     cout << "\n";
+    cout << "a.size(): " << a.size() << "\n";
     // Member find function
     auto x = a.find(2);
     if (x != a.end())
@@ -192,15 +198,42 @@ int main()
     for (auto i : b)
         cout << i << "\t";
     cout << "\n";
+    cout << "b.size(): " << b.size() << "\n";
 
     B_Plus_tree<int, 3> e({-4, 33, 64, 0, 29});
     // Move Ctor
-    e.print_tree();
+    // e.print_tree();
+    cout << "e:\n";
+    for_each(e.begin(), e.end(), disp_elements);
+    cout << "\n";
+    cout << "min element: " << *std::min_element(e.begin(), e.end()) << "\n";
+    cout << "max element: " << *std::max_element(e.begin(), e.end()) << "\n";
+
     B_Plus_tree<int, 3> g(move(e));
     e.print_tree();
     g.print_tree();
     cout << "g:\n";
-    for (auto i : g)
+    for_each(g.begin(), g.end(), disp_elements);
+
+    cout << "\n";
+
+    auto find_x = std::find(g.begin(), g.end(), 0);
+    cout << "STL Find\n";
+    if (find_x != g.end())
+    {
+        cout << 0 << " found\n";
+    }
+    else
+    {
+        cout << 0 << " not found\n";
+    }
+
+    vector<int> k(b.size(), 0);
+    std::copy(b.begin(), b.end(), k.begin());
+    cout << "STL copy\n";
+    for (auto i : k)
+    {
         cout << i << "\t";
+    }
     cout << "\n";
 }

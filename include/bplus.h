@@ -839,6 +839,7 @@ public:
     void clear()
     {
         delete_tree(root);
+        nums = 0;
         leaf_start = root = nullptr;
     }
 
