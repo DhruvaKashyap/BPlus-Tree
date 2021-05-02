@@ -122,6 +122,26 @@ private:
             }
             return o;
         }
+        void print_node_rec(int t)
+        {
+            if (!is_leaf)
+            {
+                children[0]->print_node_rec(t + 1);
+                for (int i = 0; i < active_keys; ++i)
+                {
+                    cout << string(t, '\t') << key[i] << '\n';
+                    children[i + 1]->print_node_rec(t + 1);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < active_keys; ++i)
+                {
+                    cout << string(t, '\t') << key[i] << '\n';
+                }
+                cout << '\n';
+            }
+        }
         int insert_key_node_at(T key, int loc = 0)
         {
             int i(loc);
@@ -484,23 +504,6 @@ private:
         //return iterator; iterator has p and i
     }
 
-    void print_tree(Node *root)
-    {
-        if (root)
-        {
-            cout << root << "\n";
-            if (!root->is_leaf)
-            {
-                for (auto i : root->children)
-                    cout << i << "\t";
-                cout << "\n\n";
-                for (auto i : root->children)
-                    print_tree(i);
-            }
-            cout << "\n\n\n";
-        }
-    }
-
     void delete_tree(Node *root)
     {
         if (root)
@@ -548,6 +551,10 @@ private:
     }
 
 public:
+    void print_tree()
+    {
+        root->print_node_rec(0);
+    }
     class bpiterator
     {
         Node *ptr;
