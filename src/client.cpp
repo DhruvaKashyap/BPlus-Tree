@@ -23,72 +23,143 @@ public:
 
 int main()
 {
-#if DEBUG
-    cout << "DEBUGGING TURNED ON\n";
-#endif
-    B_Plus_tree<int, 3> b({8, 2, 6, 1, 4, 7, 5});
-    for (auto i : b)
+    // Initializing a B+ tree using initializer lists
+    B_Plus_tree<int, 3> a({8, 2, 6, 1, 4, 7, 5});
+    a.print_tree();
+    cout << "a:\n";
+    for (auto i : a)
     {
         cout << i << "\t";
-        auto k = b.find(i);
-        if (k != b.end())
-        {
-            cout << i << " found\n";
-        }
-        else
-        {
-            cout << "not found\n";
-        }
     }
-    auto x = b.find(2);
-    // ++x;
-    // cout<<*x<<"\n";
-    // ++x;
-    // cout<<*x<<"\n";
-    // ++x;
-    // cout<<*x<<"\n";
-    // --x;
-    // cout<<*x<<"\n";
-    // --x;
-    // cout<<*x<<"\n";
-    // --x;
-    // cout<<*x<<"\n";
-    // --x;
-    // cout<<"x:"<<*x<<"\n";
-    // ++x;
-    // cout<<*x<<"\n";
-    // ++x;
-    // cout<<*x<<"\n";
-    // ++x;
-    // cout<<*x<<"\n";
-    // ++x;
-    // cout<<*x<<"\n";
-    x = b.find(100);
-    if (x == b.end())
+    cout << "\n";
+    cout << "a.size(): " << a.size() << "\n";
+    cout << "Using reverse iterators\n";
+    for (auto i = a.rbegin(); i != a.rend(); ++i)
     {
-        cout << "nnot found\n";
+        cout << *i << "\t";
     }
-    // return 0;
-    B_Plus_tree<int, 3> c(b);
-    // B_Plus_tree<int, 3> c({8, 2, 3, 6, 1, 4, 7, 5});
-    // c = b;
-    cout << "copied tree\n";
-    for (auto i : c)
+    cout << "\n";
+    // Standard insert (insert(key))
+    a.insert(200);
+    a.insert(3);
+    a.insert(25);
+    cout << "inserted 3,200,25 to the tree\n";
+    a.print_tree();
+    for (auto i : a)
+    {
+        cout << i << "\t";
+    }
+    cout << "\n";
+
+    // Insert using a pair of iterators
+    vector<int> myvec({14, 15, 16, 12, 13});
+    a.insert(myvec.begin(), myvec.end());
+    cout << "inserting elements using a pair of iterators\n";
+    a.print_tree();
+    cout << "a:\n";
+    for (auto i : a)
+    {
+        cout << i << "\t";
+    }
+    cout << "\n";
+
+    // Delete
+    a.delete_key(6);
+    a.delete_key(7);
+    a.delete_key(14);
+    a.delete_key(200);
+    // Deleting a key that does not exist
+    a.delete_key(120);
+    cout << "Deleting 6,7,14,200\n";
+    a.print_tree();
+    cout << "a:\n";
+    for (auto i : a)
+    {
+        cout << i << "\t";
+    }
+    cout << "\n";
+
+    // To show what the delete returns
+    auto del_key = a.delete_key(12);
+    cout << "Deleting 12; Iterator returns " << *del_key << "\n";
+    a.print_tree();
+
+    // Deleting elements using a pair of iterators
+    a.delete_key(myvec.begin(), myvec.end());
+    cout << "Deleting elements using a pair of iterators\n";
+    a.print_tree();
+    cout << "a:\n";
+    for (auto i : a)
+    {
+        cout << i << "\t";
+    }
+    cout << "\n";
+
+    // Clearing all elements
+    a.clear();
+    a.print_tree();
+    cout << boolalpha;
+    cout << "a.empty(): " << a.empty() << "\n";
+    a.insert(100);
+    a.insert({400, 200, 300});
+    a.print_tree();
+    cout << "Clearing all elements and inserting\n";
+    cout << "a:\n";
+    for (auto i : a)
+    {
+        cout << i << "\t";
+    }
+    cout << "\n";
+    // Member find function
+    auto x = a.find(2);
+    if (x != a.end())
+    {
+        cout << 2 << " found\n";
+    }
+    else
+    {
+        cout << 2 << " not found\n";
+    }
+    x = a.find(100);
+    if (x != a.end())
+    {
+        cout << 100 << " found\n";
+    }
+    else
+    {
+        cout << 100 << " not found\n";
+    }
+    x = a.find(400);
+    if (x != a.end())
+    {
+        cout << 400 << " found\n";
+    }
+    else
+    {
+        cout << 400 << " not found\n";
+    }
+    // Copy Constructor
+    B_Plus_tree<int, 3> b(a);
+    cout << "Copied tree b(a)\n";
+    for (auto i : b)
         cout << i << "\t";
     cout << "\n";
     cout << boolalpha;
-    cout << "b==c is " << (b == c) << "\n";
-    // b.clear();
-    // b.delete_key_temp(6);
+    a.print_tree();
+    b.print_tree();
+    cout << "a==b is " << (a == b) << "\n";
+
     b.insert(3);
     b.insert(10);
-    c.insert(8);
-    cout << "copied tree after old tree is changed\n";
-    for (auto i : c)
+    b.insert(8);
+    a.print_tree();
+    b.print_tree();
+    cout << "Copied tree after Old tree is changed: b\n";
+    for (auto i : b)
         cout << i << "\t";
     cout << "\n";
-    cout << "old tree\n";
-    for (auto i : b)
+    cout << "Old tree a:\n";
+    for (auto i : a)
         cout << i << "\t";
     cout << "\n";
 
@@ -97,126 +168,39 @@ int main()
     for (auto i : d)
     {
         cout << i << "\t";
-        auto k = d.find(i);
-        if (k != d.end())
-        {
-            cout << i << " found\n";
-        }
     }
     cout << "\n";
+    // Copy Assignment Operator
+    d.print_tree();
+    b.print_tree();
     d = b;
+    d.print_tree();
+    b.print_tree();
     cout << "after d=b\n";
     for (auto i : d)
         cout << i << "\t";
     cout << "\n";
     d.insert(25);
     d.insert(35);
+    d.print_tree();
     cout << "updated d\n";
     for (auto i : d)
         cout << i << "\t";
     cout << "\n";
-    cout << "old b\n";
+    b.print_tree();
+    cout << "b:\n";
     for (auto i : b)
         cout << i << "\t";
     cout << "\n";
-    B_Plus_tree<int, 3> e({4});
-    B_Plus_tree<int, 3> f(e);
-    cout << "f\n";
-    for (auto i : f)
-        cout << i << "\t";
-    cout << "\n";
-    f.delete_key(4);
-    cout << "f after 4 is deleted\n";
-    for (auto i : f)
-        cout << i << "\t";
-    cout << "\n";
-    e.insert(5);
-    cout << "e after 4 is deleted in f\n";
-    for (auto i : e)
-        cout << i << "\t";
-    cout << "\n";
 
+    B_Plus_tree<int, 3> e({-4, 33, 64, 0, 29});
+    // Move Ctor
+    e.print_tree();
     B_Plus_tree<int, 3> g(move(e));
+    e.print_tree();
+    g.print_tree();
     cout << "g:\n";
     for (auto i : g)
         cout << i << "\t";
     cout << "\n";
-    cout << "e:\n";
-    for (auto i : e)
-        cout << i << "\t";
-    cout << "\n";
-    f = move(b);
-    cout << "f after move(b):\n";
-    for (auto i : f)
-        cout << i << "\t";
-    cout << "\n";
-    cout << "d.size(): " << d.size() << "\n";
-
-    {
-        B_Plus_tree<int, 3> b({8, 2, 3, 6, 1, 4, 7, 5});
-        for (auto i : b)
-            cout << i << "\t";
-        cout << "\n";
-        B_Plus_tree<int, 3> c(b);
-        // B_Plus_tree<int, 3> c({8, 2, 3, 6, 1, 4, 7, 5});
-        cout << "copied tree\n";
-        for (auto i : c)
-            cout << i << "\t";
-        cout << "\n";
-        b.clear();
-        b.delete_key(6);
-        b.insert(20);
-        b.insert(50);
-        cout << "copied tree after old tree is changed\n";
-        for (auto i : c)
-            cout << i << "\t";
-        cout << "\n";
-        cout << "old tree\n";
-        for (auto i : b)
-            cout << i << "\t";
-        cout << "\n";
-
-        for (int i = 1; i <= 8; i++)
-        {
-            b.delete_key(i);
-            for (auto j : b)
-                cout << j << "\t";
-            cout << "\n";
-        }
-        cout << "Final\n";
-        for (auto i : b)
-            cout << i << '\t';
-        cout << "\n";
-        // auto it = b.end();
-        for (auto it = b.find(8); it != b.begin() && it != b.end(); --it)
-        {
-            cout << "hey!\n";
-            cout << *it << "\t";
-        }
-        // auto rit = b.rend();
-        // cout << *rit << "\n";
-        for (auto i = b.rbegin();
-             i != b.rend(); ++i)
-        {
-            cout << *i << "\t";
-            if (*i == 1)
-            {
-                break;
-            }
-        }
-        cout << "\n";
-    }
-    B_Plus_tree<int, 3> bt({1, 2, 3, 4, 5, 6});
-    cout << "test\n";
-    cout << *bt.delete_key(3) << "\n";
-    cout << *bt.delete_key(5) << "\n";
-    cout << "bt.size(): " << bt.size() << "\n";
-    cout << (bt.delete_key(6) == bt.end()) << "\n";
-    cout << (bt.delete_key(7) == bt.end()) << "\n";
-    cout << (bt.delete_key(4) == bt.end()) << "\n";
-    cout << *bt.delete_key(1) << "\n";
-    cout << "bt.size(): " << bt.size() << "\n";
-
-    bt.clear();
-    cout << (bt.delete_key(2) == bt.end()) << "\n";
 }

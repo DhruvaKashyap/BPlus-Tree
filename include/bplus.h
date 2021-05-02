@@ -122,15 +122,15 @@ private:
             }
             return o;
         }
-        void print_node_rec(int t)
+        void print_node_rec(int t = 0, int gap = 1)
         {
             if (!is_leaf)
             {
-                children[0]->print_node_rec(t + 1);
+                children[0]->print_node_rec(t + gap);
                 for (int i = 0; i < active_keys; ++i)
                 {
                     cout << string(t, '\t') << key[i] << '\n';
-                    children[i + 1]->print_node_rec(t + 1);
+                    children[i + 1]->print_node_rec(t + gap);
                 }
             }
             else
@@ -553,7 +553,10 @@ private:
 public:
     void print_tree()
     {
-        root->print_node_rec(0);
+        if (root)
+            root->print_node_rec(5,2);
+        else
+            cout << "Empty Tree\n";
     }
     class bpiterator
     {
