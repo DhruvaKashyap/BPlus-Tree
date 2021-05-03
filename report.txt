@@ -1,14 +1,17 @@
 B-Plus Tree
 
 Code Structure:
-include:
+
+include/
     bplus.h - Main file consisting of the definition of the B-Plus-Tree and the functions defined.
     concepts.h - using concepts to make sure that the degree of the tree is valid.
     tests.h  - Testing file
-client:
+
+src/
     client.cpp - Main test file.
 
 To run the code:
+
 make
 ./a.out
 
@@ -23,7 +26,8 @@ Functions:
 3. delete_key
     a. delete using initializer list
     b. delete using a pair of iterators
-    c. delete a key - returns an iterator to the next element if any.
+    c. delete a key - returns an iterator to the next element if any
+    d. delete using iterator - delete the element pointed by the iterator
 4. find
     returns an iterator to the element if found else it returns one past the end.
 5. clear
@@ -36,8 +40,8 @@ Functions:
     Checks if the elements of the two trees are same or not.
 
 Supported Iterators:
-1. Standard Iterator with begin() and end() and the supported traits.
-2. Reverse Iterator with rbegin() and rend() and the supported traits.
+1. Constant Bidirectional Iterator with begin() and end() and the supported traits.
+2. Constant Bidirectional Reverse Iterator with rbegin() and rend() and the supported traits.
 
 The type which corresponds to the the key of the B plus tree should support:
 1. operator< by default or the client should provide a comparator.
