@@ -14,7 +14,7 @@ debug: $(DEBUG CLIENT) $(HEADER)
 	$(CXX) $(CPPFLAGS) -g -DDEBUG=1 $(CLIENT) -o debug.out
 
 test: $(HEADER) $(TEST)
-	$(CXX) $(CPPFLAGS) $(TEST) -o test.out
+	$(CXX) $(CPPFLAGS) -O3 $(TEST) -o test.out
 
 .PHONY: clean
 

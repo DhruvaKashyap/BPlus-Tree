@@ -15,7 +15,7 @@ class test
     const int N = 100000;
     const int trials = 1000;
     const int Tmin = 1;
-    const int Tmax = 100;
+    const int Tmax = 1000;
 
 public:
     test()

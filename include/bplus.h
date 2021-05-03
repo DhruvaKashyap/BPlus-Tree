@@ -14,7 +14,8 @@
 #include <iostream>
 #include "concepts.h"
 using namespace std;
-
+#define INIT_TAB 5
+#define GAP 2
 template <typename T, int N = BPLUSVAL<T>::value, typename Compare = less<T>, class Alloc = allocator<T>>
 requires BPLUSMIN<N> class B_Plus_tree
 {
@@ -84,9 +85,9 @@ private:
 private:
     struct Node
     {
-        T *key; // 78896 could be a vector. could keep ptrs to keys to allow non default ctorable, more mem usage
-        // vector<T> key; //80384 allows non default constructable
-        // array<T, N> key; //78896
+        T *key; // could be a vector. could keep ptrs to keys to allow non default ctorable, more mem usage
+        // vector<T> key; //allows non default constructable
+        // array<T, N> key; // Initial Implemen
         Node *children[N + 1];
         Node *parent = nullptr;
         Node *next = nullptr;
@@ -106,10 +107,6 @@ private:
         }
         Node(const Node &n) = delete;
         Node &operator=(const Node &rhs) = delete;
-        void *operator new(size_t size)
-        {
-            return ::operator new(size); //call allocator or something here
-        }
         friend ostream &operator<<(ostream &o, const Node *n)
         {
             if (!n)
@@ -429,8 +426,6 @@ private:
         target->parent->children[pos + 1] = nsibling;
         if (target->is_leaf)
         {
-            // should median placement depend on predicate?
-            // if yes change here and target->active_keys
             copy((target->key) + N / 2, (target->key) + N, (nsibling->key));
             // copy(std::begin(target->key) + N / 2, std::begin(target->key) + N, std::begin(nsibling->key));
             if (target->next)
@@ -554,7 +549,7 @@ public:
     void print_tree()
     {
         if (root)
-            root->print_node_rec(5,2);
+            root->print_node_rec(INIT_TAB, GAP);
         else
             cout << "Empty Tree\n";
     }

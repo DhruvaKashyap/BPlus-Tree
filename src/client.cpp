@@ -5,19 +5,45 @@
 #include <set>
 using namespace std;
 
-class CC
+class Date
 {
-    int a;
+private:
+    int dd_;
+    int mm_;
+    int yy_;
 
 public:
-    CC(int s) : a(s){};
-    friend ostream &operator<<(ostream &o, const CC &x)
+    Date(int dd, int mm, int yy)
+        : dd_(dd), mm_(mm), yy_(yy)
     {
-        return o << x.a;
     }
-    friend bool operator<(const CC x1, const CC x2)
+    friend ostream &operator<<(ostream &o, const Date &d);
+    friend bool operator<(const Date &lhs, const Date &rhs)
     {
-        return x1.a < x2.a;
+        if (lhs.yy_ < rhs.yy_)
+            return true;
+        if (lhs.yy_ == rhs.yy_ && lhs.mm_ < rhs.mm_)
+            return true;
+        if (lhs.yy_ == rhs.yy_ && lhs.mm_ == rhs.mm_ && lhs.dd_ < rhs.dd_)
+            return true;
+        return false;
+    }
+    bool compare_month(const Date &rhs) const
+    {
+        return mm_ < rhs.mm_;
+    }
+};
+
+ostream &operator<<(ostream &o, const Date &d)
+{
+    return o << d.dd_ << "-" << d.mm_ << "-" << d.yy_;
+}
+
+struct SameMonth
+{
+    bool operator()(const Date &lhs, const Date &rhs)
+    {
+        return lhs.compare_month(rhs);
     }
 };
 void disp_elements(int i)
@@ -200,7 +226,7 @@ int main()
     cout << "\n";
     cout << "b.size(): " << b.size() << "\n";
 
-    B_Plus_tree<int, 3> e({-4, 33, 64, 0, 29});
+    B_Plus_tree<int> e({-4, 33, 64, 0, 29});
     // Move Ctor
     // e.print_tree();
     cout << "e:\n";
@@ -208,8 +234,8 @@ int main()
     cout << "\n";
     cout << "min element: " << *std::min_element(e.begin(), e.end()) << "\n";
     cout << "max element: " << *std::max_element(e.begin(), e.end()) << "\n";
-
-    B_Plus_tree<int, 3> g(move(e));
+    e.print_tree();
+    B_Plus_tree<int> g(move(e));
     e.print_tree();
     g.print_tree();
     cout << "g:\n";
@@ -236,4 +262,31 @@ int main()
         cout << i << "\t";
     }
     cout << "\n";
+    {
+        {
+            cout << "--------------------------------------\n";
+            B_Plus_tree<Date> dates_tree({{11, 9, 2001},
+                                          {26, 1, 2001},
+                                          {11, 1, 1966},
+                                          {30, 1, 1948},
+                                          {26, 12, 2004}});
+            dates_tree.print_tree();
+            for (auto i : dates_tree)
+                cout << i << "\t";
+            cout << "\n";
+            cout << *dates_tree.find({11, 9, 2001}) << '\n';
+            cout << "--------------------------------------\n";
+        }
+        {
+            B_Plus_tree<Date, 3, SameMonth> dates_tree({{11, 9, 2001},
+                                                        {26, 1, 2001},
+                                                        {11, 1, 1966},
+                                                        {30, 1, 1948},
+                                                        {26, 12, 2004}});
+            dates_tree.print_tree();
+            for (auto i : dates_tree)
+                cout << i << "\t";
+            cout << "\n";
+        }
+    }
 }
