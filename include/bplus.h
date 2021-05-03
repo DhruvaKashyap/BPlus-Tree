@@ -34,32 +34,85 @@ public:
     using const_iterator = const iterator;
     using const_reverse_iterator = const reverse_iterator;
     /*
+    // default constructor
+    // tree contains no elements
     B_Plus_tree();
+
+    // constructor which accepts initializer lists
     explicit B_Plus_tree(std::initializer_list<T> l);
+
+    // copy constructor
     B_Plus_tree(const B_Plus_tree<T, N> &copy);
+
+    // contructor that accepts a pair of iterators
     template <typename it>
     B_Plus_tree(it begin, it end);
+
+    // copy assignment operator
     B_Plus_tree<T, N, Compare, Alloc> &operator=(const B_Plus_tree<T, N, Compare, Alloc> &rhs);
+
+    // move constructor
     B_Plus_tree(B_Plus_tree<T, N, Compare, Alloc> &&copy);
+
+    // move assignment operator
     B_Plus_tree<T, N, Compare, Alloc> &operator=(B_Plus_tree<T, N, Compare, Alloc> &&rhs);
+    
+    // destructor
     ~B_Plus_tree();
+
+    // function that accepts a key and inserts it into the tree
+    // returns a pair
+    //      first - iterator to the inserted key
+    //      second - boolean
+    //                  false if key is already present in the tree
+    //                  else true
     pair<iterator, bool> insert(T key);
+
+    // insert function that accepts an initializer list
     void insert(std::initializer_list<T> l);
+
+    // insert function that accepts a pair of iterators
+    template <typename it>
+    void insert(it begin, it end);
+
+    // function that accepts a key and deletes it from the tree
+    // returns an iterator to the key which is after the deleted key
     iterator delete_key(T key);
+
+    // delete function that accepts an iterator to the element to be deleted
     iterator delete_key(iterator it);
-    void delete_key(iterator begin, iterator end);
+
+    // delete function that accepts a pair of iterators
+    template <typename it>
+    void delete_key(it begin, it end);
+
+    // function that deletes the entire tree
     void clear();
+
+    // member find
     iterator find(T key) const;
+
+    // function that returns an iterator to the first element in the tree
     iterator begin() const;
+
+    // function that returns an iterator to the location one past end
     iterator end() const;
+
     const_iterator cbegin() const;
     const_iterator cend() const;
+
     reverse_iterator rbegin() const;
     reverse_iterator rend() const;
+
     const_reverse_iterator crbegin() const;
     const_reverse_iterator crend() const;
+
+    // returns the number of elements in the tree
     size_type size() const;
+
+    // returns true if the tree is empty
     bool empty() const;
+    
     friend bool operator==(const B_Plus_tree<T, N, Compare, Alloc> &lhs, const B_Plus_tree<T, N, Compare, Alloc> &rhs);
     friend bool operator!=(const B_Plus_tree<T, N, Compare, Alloc> &lhs, const B_Plus_tree<T, N, Compare, Alloc> &rhs);
 */
@@ -152,14 +205,18 @@ private:
         }
     };
 
+    //transfers all contents from the right to the left node...
+    //and deallocates the memory allocated to the right node
     Node *myMerge(Node *left, Node *right, int leftNodePos)
     {
+        // if the nodes are internal nodes, bring down a key from parent
         if (!left->is_leaf)
         {
             left->key[left->active_keys] = left->parent->key[leftNodePos];
             ++left->active_keys;
         }
 
+        //transfers keys and children from the right to the left node
         for (int j = 0; j < right->active_keys; ++j)
         {
             left->key[left->active_keys + j] = right->key[j];
@@ -168,6 +225,7 @@ private:
         left->active_keys += right->active_keys;
         left->children[left->active_keys] = right->children[right->active_keys];
 
+        //push the contents of the parent to the left by one position
         for (int j = leftNodePos; j < left->parent->active_keys - 1; ++j)
         {
             left->parent->key[j] = left->parent->key[j + 1];
@@ -176,11 +234,13 @@ private:
         left->parent->children[left->parent->active_keys] = nullptr;
         --left->parent->active_keys;
 
+        // set the parent of the newly added children
         for (int i = 0; i <= left->active_keys && left->children[i]; ++i)
         {
             left->children[i]->parent = left;
         }
 
+        // change next and prev pointers
         left->next = right->next;
         if (left->next)
         {
@@ -193,8 +253,10 @@ private:
         return left;
     }
 
+    //transfers one key between the nodes
     void reDistribute(Node *left, Node *right, int leftNodePos, int curr)
     {
+        //transfers one key from the right to the left node
         if (curr == 0)
         {
             if (left->is_leaf)
@@ -230,8 +292,10 @@ private:
 
             --right->active_keys;
         }
+        //transfers one key from the left to the right node
         else
         {
+            //push contents of the right node to the right by one position
             for (int j = right->active_keys - 1; j >= 0; j--)
             {
                 right->key[j + 1] = right->key[j];
@@ -241,19 +305,23 @@ private:
 
             if (left->is_leaf)
             {
+                //get last key from left sibling
                 right->key[0] = left->key[left->active_keys - 1];
             }
             else
             {
+                //get key from parent
                 right->key[0] = left->parent->key[leftNodePos];
             }
             ++right->active_keys;
 
+            //get last child from left sibling
             right->children[0] = left->children[left->active_keys];
             if (right->children[0])
                 right->children[0]->parent = right;
             left->children[left->active_keys] = nullptr;
 
+            //push last key of left node to the parent
             left->parent->key[leftNodePos] = left->key[left->active_keys - 1];
             --left->active_keys;
         }
@@ -494,7 +562,7 @@ private:
                 split_push_up(target, target->key[N / 2]);
             }
             ++nums;
-            return make_pair(bpiterator(p, leaf_end, i), true);
+            return make_pair(bpiterator(target, leaf_end, i), true);
         }
         //return iterator; iterator has p and i
     }
@@ -707,7 +775,7 @@ public:
         }
     }
 
-    B_Plus_tree(const B_Plus_tree<T, N> &copy)
+    B_Plus_tree(const B_Plus_tree<T, N, Compare, Alloc> &copy)
     {
         if (copy.root)
         {
@@ -816,8 +884,7 @@ public:
         return delete_rec(root, key, 0);
     }
 
-    template <typename it>
-    iterator delete_key(it i)
+    iterator delete_key(iterator i)
     {
         return delete_rec(root, *i, 0);
     }
