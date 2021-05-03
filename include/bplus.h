@@ -29,6 +29,7 @@ public:
     using reference = const value_type &;
     using const_reference = const value_type &;
     using pointer = std::allocator_traits<Alloc>::pointer;
+    using allocator_type = Alloc;
     using iterator = bpiterator;
     using reverse_iterator = bpriterator;
     using const_iterator = const iterator;
@@ -42,7 +43,7 @@ public:
     explicit B_Plus_tree(std::initializer_list<T> l);
 
     // copy constructor
-    B_Plus_tree(const B_Plus_tree<T, N> &copy);
+    B_Plus_tree(const B_Plus_tree<T, N, Compare, Alloc> &copy);
 
     // contructor that accepts a pair of iterators
     template <typename it>
@@ -66,7 +67,7 @@ public:
     //      second - boolean
     //                  false if key is already present in the tree
     //                  else true
-    pair<iterator, bool> insert(T key);
+    pair<iterator, bool> insert(const T key);
 
     // insert function that accepts an initializer list
     void insert(std::initializer_list<T> l);
@@ -77,7 +78,7 @@ public:
 
     // function that accepts a key and deletes it from the tree
     // returns an iterator to the key which is after the deleted key
-    iterator delete_key(T key);
+    iterator delete_key(const T key);
 
     // delete function that accepts an iterator to the element to be deleted
     iterator delete_key(iterator it);
@@ -90,7 +91,7 @@ public:
     void clear();
 
     // member find
-    iterator find(T key) const;
+    iterator find(const T key) const;
 
     // function that returns an iterator to the first element in the tree
     iterator begin() const;
@@ -127,20 +128,20 @@ private:
     /*
     Node *myMerge(Node *left, Node *right, int leftNodePos);
     void reDistribute(Node *left, Node *right, int leftNodePos, int curr);
-    bpiterator delete_rec(Node *node, T key, int nodePos);
-    bpiterator delete_rec(Node *node, T key, int nodePos);
+    bpiterator delete_rec(Node *node, const T key, int nodePos);
+    bpiterator delete_rec(Node *node, const T key, int nodePos);
     void split_push_up(Node *target, T median);
-    pair<bpiterator, bool> insert_key(T key);
+    pair<bpiterator, bool> insert_key(const T key);
     void print_tree(Node *root);
     void delete_tree(Node *root);
     void recursive_copy(Node *src, Node *dst, Node **nr);
-*/
+    */
 private:
     struct Node
     {
         T *key; // could be a vector. could keep ptrs to keys to allow non default ctorable, more mem usage
         // vector<T> key; //allows non default constructable
-        // array<T, N> key; // Initial Implemen
+        // array<T, N> key; // Initial Implementation
         Node *children[N + 1];
         Node *parent = nullptr;
         Node *next = nullptr;
@@ -192,7 +193,7 @@ private:
                 cout << '\n';
             }
         }
-        int insert_key_node_at(T key, int loc = 0)
+        int insert_key_node_at(const T key, int loc = 0)
         {
             int i(loc);
             while (i < this->active_keys && Compare()(this->key[i], key))
@@ -327,7 +328,7 @@ private:
         }
     }
 
-    bpiterator delete_rec(Node *node, T key, int nodePos)
+    bpiterator delete_rec(Node *node, const T key, int nodePos)
     {
         int flag = 0;
         int res;
@@ -505,16 +506,16 @@ private:
         }
         else
         {
-            if constexpr (N == 2)
-            {
-                nsibling->key[0] = target->key[1];
-            }
-            else
-            {
-                copy((target->key) + N / 2 + 1, (target->key) + N, (nsibling->key));
-                // copy(std::begin(target->key) + N / 2 + 1, std::begin(target->key) + N, std::begin(nsibling->key));
-                --nsibling->active_keys;
-            }
+            // if constexpr (N == 2)
+            // {
+            //     nsibling->key[0] = target->key[1];
+            // }
+            // else
+            // {
+            copy((target->key) + N / 2 + 1, (target->key) + N, (nsibling->key));
+            // copy(std::begin(target->key) + N / 2 + 1, std::begin(target->key) + N, std::begin(nsibling->key));
+            --nsibling->active_keys;
+            // }
             copy(target->children + N / 2 + 1, target->children + N + 1, std::begin(nsibling->children) + static_cast<int>(N == 2));
             for_each(std::begin(nsibling->children), nsibling->children + N / 2 + 1, [nsibling](auto i) { if(i) i->parent = nsibling; });
         }
@@ -524,7 +525,7 @@ private:
             split_push_up(target->parent, target->parent->key[N / 2]);
     }
 
-    pair<bpiterator, bool> insert_key(T key)
+    pair<bpiterator, bool> insert_key(const T key)
     {
         if (!root)
         {
@@ -635,10 +636,10 @@ public:
         using value_type = T;
         using iterator_category = bidirectional_iterator_tag;
         using difference_type = ptrdiff_t;
-        using pointer = const T *;
-        using const_pointer = const T *;
-        using reference = const T &;
-        using const_reference = const T &;
+        using pointer = const value_type *;
+        using const_pointer = const value_type *;
+        using reference = const value_type &;
+        using const_reference = const value_type &;
         friend bool operator==(const bpiterator &lhs, const bpiterator &rhs)
         {
             return lhs.ptr == rhs.ptr && lhs.index == rhs.index;
@@ -723,10 +724,10 @@ public:
         using value_type = T;
         using iterator_category = bidirectional_iterator_tag;
         using difference_type = ptrdiff_t;
-        using pointer = const T *;
-        using const_pointer = const T *;
-        using reference = const T &;
-        using const_reference = const T &;
+        using pointer = const value_type *;
+        using const_pointer = const value_type *;
+        using reference = const value_type &;
+        using const_reference = const value_type &;
         friend bool operator==(const bpriterator &lhs, const bpriterator &rhs)
         {
             return lhs.base == rhs.base;
@@ -830,7 +831,7 @@ public:
         copy.leaf_start = nullptr;
     }
 
-    //move ass
+    //move assignment
     B_Plus_tree<T, N, Compare, Alloc> &operator=(B_Plus_tree<T, N, Compare, Alloc> &&rhs)
     {
 
@@ -855,7 +856,7 @@ public:
         delete_tree(root);
     }
 
-    pair<iterator, bool> insert(T key)
+    pair<iterator, bool> insert(const T key)
     {
         return insert_key(key);
     }
@@ -879,7 +880,7 @@ public:
         }
     }
 
-    iterator delete_key(T key)
+    iterator delete_key(const T key)
     {
         return delete_rec(root, key, 0);
     }
@@ -905,7 +906,7 @@ public:
         leaf_start = root = nullptr;
     }
 
-    iterator find(T key) const
+    iterator find(const T key) const
     {
         Node *temp = root;
         int i(0);
@@ -965,7 +966,7 @@ public:
         return reverse_iterator(nullptr, leaf_start, 0);
     }
 
-    // std::reverse_iterator<iterator> rbegin()
+    // std::reverse_iterator<iterator> rbegin() const
     // {
     //     return std::reverse_iterator<iterator>(iterator(leaf_end, leaf_start, leaf_end->active_keys));
     // }
