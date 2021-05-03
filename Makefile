@@ -10,8 +10,8 @@ all: a.out
 a.out: $(CLIENT) $(HEADER)
 	$(CXX) $(CPPFLAGS) $(CLIENT)
 
-debug: $(DEBUG CLIENT) $(HEADER)
-	$(CXX) $(CPPFLAGS) -g -DDEBUG=1 $(CLIENT) -o debug.out
+debug: $(DEBUG) $(HEADER)
+	$(CXX) $(CPPFLAGS) -g -DDEBUG=1 $(DEBUG) -o debug.out
 
 test: $(HEADER) $(TEST)
 	$(CXX) $(CPPFLAGS) -O3 $(TEST) -o test.out

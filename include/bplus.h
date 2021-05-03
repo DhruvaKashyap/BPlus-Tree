@@ -14,7 +14,7 @@
 #include <iostream>
 #include "concepts.h"
 using namespace std;
-#define INIT_TAB 5
+#define INIT_TAB 2
 #define GAP 2
 template <typename T, int N = BPLUSVAL<T>::value, typename Compare = less<T>, class Alloc = allocator<T>>
 requires BPLUSMIN<N> class B_Plus_tree

@@ -219,4 +219,7 @@ int main()
 
     bt.clear();
     cout << (bt.delete_key(2) == bt.end()) << "\n";
+    B_Plus_tree<int> xaaa({1, 2, 3, 4, 5, 6, 7});
+    auto t = xaaa.insert(8).first;
+    cout << *t << '\n';
 }
