@@ -1,6 +1,6 @@
 # BPlus-Tree
 
-##Implementing generic B+ Tree Container
+## Implementing generic B+ Tree Container
 
 Team Members: 
 
@@ -17,44 +17,45 @@ All Generic algorithms like find and copy which work with constant bidirectional
 Iterator traits class has been provided for this type.
 
 ## Code Structure
-
+```
 include/
     bplus.h - Main file consisting of the definition of the B-Plus-Tree and the functions defined.
     concepts.h - using concepts to make sure that the degree of the tree is valid.
     tests.h  - Testing file
-
+```
+```
 src/
     client.cpp - Main file
     tests.cpp  - test client
-
+```
 ## To run the code
-
+```
 make
 ./a.out
-
+```
 This runs the src/client.cpp file.
 
 ## Functions
 
 1. Class is made canonical.
-2. insert 
-    a. insert using initializer list
-    b. insert using a pair of iterators
-    c. insert a key - returns an iterator to the inserted element
-3. delete_key
-    a. delete using initializer list
-    b. delete using a pair of iterators
-    c. delete a key - returns an iterator to the next element if any
+2. insert\
+    a. insert using initializer list\
+    b. insert using a pair of iterators\
+    c. insert a key - returns an iterator to the inserted element\
+3. delete_key\
+    a. delete using initializer list\
+    b. delete using a pair of iterators\
+    c. delete a key - returns an iterator to the next element if any\
     d. delete using iterator - delete the element pointed by the iterator
-4. find
+4. find\
     returns an iterator to the element if found else it returns one past the end.
-5. clear
+5. clear\
     Deletes all the elements in the tree.
-6. empty
+6. empty\
     Returns true if the tree is empty.
-7. size
+7. size\
     Returns the number of the elements in the tree.
-8. operator== and operator!=
+8. operator== and operator!=\
     Checks if the elements of the two trees are same or not.
 
 ## Supported Iterators
@@ -65,23 +66,11 @@ This runs the src/client.cpp file.
 The type which corresponds to the the key of the B plus tree should support:
 1. operator< by default or the client should provide a comparator.
 2. operator<< if print_tree is to be used. 
-3. Copy constructor to pass to insert
+3. Copy constructor to pass to insert\
 Supports all STL algorithms that operate on constant bidirectional iterators
 
 
 ## References
 
-https://en.wikipedia.org/wiki/B%2B_tree
+https://en.wikipedia.org/wiki/B%2B_tree\
 https://www.cs.usfca.edu/~galles/visualization/BPlusTree.html
-
-
-Presentation:
-
-Template meta programming: Quantity pattern
-    in copy ctor, 4+ tree != 3+tree
-Concepts
-traits
-allocator in the node
-interface
-iterator and traits
-move to client
